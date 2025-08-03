@@ -1,5 +1,7 @@
 {
   "name": "rentApp",
-  "integrations": {},
+  "integrations": {
+    "capacitor": {}
+  },
   "type": "vue-vite"
 }
