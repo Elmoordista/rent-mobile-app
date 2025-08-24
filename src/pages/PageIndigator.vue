@@ -1,5 +1,5 @@
 <template>
-  <ion-page>
+  <ion-page class="ion-page-wrapper">
     <ion-header class="ion-no-border ion-padding ion-text-center header" style="display: flex; align-items: center; justify-content: center;">
       <ion-buttons slot="start" @click="handleBack">
         <ion-icon :icon="arrowBackIcon" slot="end" />
@@ -42,8 +42,7 @@
       </div>
 
       <!-- Step Content -->
-      <div class="step-content" style="height: 50vh;">
-        <component :is="currentStep === 0 ? 'BookingDetails' : 'div'" class="step-details">
+      <div class="step-content" style="height: 68vh; overflow-y: scroll;">
           <template v-if="currentStep === 0">
             <BookingDetails />
           </template>
@@ -53,7 +52,6 @@
           <template v-if="currentStep === 2">
             <Confirmation />
           </template>
-        </component>
       </div>
     </ion-content>
 
@@ -140,10 +138,9 @@ export default {
 }
 .header {
   border-bottom: 1px solid #e0e0e0;
-  background-color: #fff;
+  background-color: #f9f9f9;
 }
 .stepper-wrapper {
-  margin-bottom: 40px;
   max-width: 400px; /* limit width */
   margin-left: auto;
   margin-right: auto;
@@ -211,11 +208,16 @@ export default {
 
 .step-content {
   text-align: center;
-  margin: 40px 0;
 }
 
 .step-controls {
   display: flex;
   gap: 10px;
+}
+</style>
+
+<style scoped>
+.ion-page-wrapper{
+    --ion-background-color: #f9f9f9;
 }
 </style>

@@ -6,6 +6,7 @@ import BookingPage from '../pages/BookingPage.vue';
 import ProfilePage from '../pages/ProfilePage.vue';
 import ProductPage from '../pages/ProductPage.vue';
 import PageIndigator from '../pages/PageIndigator.vue';
+import ReviewsPage from '../pages/ReviewsPage.vue';
 
 const routes = [
   {
@@ -16,6 +17,11 @@ const routes = [
     path: '/product/:id',
     name: 'ProductPage',
     component: ProductPage
+  },
+   {
+    path: '/reviews/:id',
+    name: 'ReviewsPage',
+    component: ReviewsPage
   },
   {
     path: '/page-indicator',

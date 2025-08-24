@@ -1,126 +1,283 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Payment</ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <ion-page class="ion-page-wrapper booking-details-wrapper">
+    <ion-card class="booking-details">
+      <div class="book-driver">
+        <span>Book With Driver</span>
+        <span>Don't have a driver, book a driver.</span>
+      </div>
+      <ion-toggle></ion-toggle>
+    </ion-card>
+    
 
-    <ion-content fullscreen class="ion-padding">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Enter Payment Details</ion-card-title>
-        </ion-card-header>
+    <!-- Customer Info -->
+    <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+      <ion-input label-placement="stacked" placeholder="Full name">
+        <ion-icon slot="start" :icon="person" aria-hidden="true"></ion-icon>
+      </ion-input>
+      <ion-input label-placement="stacked" placeholder="Email address">
+        <ion-icon slot="start" :icon="mail" aria-hidden="true"></ion-icon>
+      </ion-input>
+      <ion-input label-placement="stacked" placeholder="Phone number">
+        <ion-icon slot="start" :icon="call" aria-hidden="true"></ion-icon>
+      </ion-input>
+      <ion-input label-placement="stacked" placeholder="Address">
+        <ion-icon slot="start" :icon="location" aria-hidden="true"></ion-icon>
+      </ion-input>
+    </div>
+    
+    <!-- Requirements -->
 
-        <ion-card-content>
-          <ion-item>
-            <ion-label position="floating">Cardholder Name</ion-label>
-            <ion-input v-model="payment.name" type="text" required></ion-input>
-          </ion-item>
+    <div class="div-wrapper">
+      <span>Driver Licence :</span>
+      <div>
+        <ion-input id="driver-license" label-placement="stacked" placeholder="Enter your requirements" type="file"></ion-input>
+      </div>
+    </div>
 
-          <ion-item>
-            <ion-label position="floating">Card Number</ion-label>
-            <ion-input
-              v-model="payment.cardNumber"
-              type="text"
-              maxlength="16"
-              minlength="16"
-              inputmode="numeric"
-              required
-              @input="formatCardNumber"
-            ></ion-input>
-          </ion-item>
+    <!-- Rental Date & Time -->
+    <div class="rental-datetime">
+      <span>Rental Date</span>
 
-          <ion-item>
-            <ion-label position="floating">Expiry Date (MM/YY)</ion-label>
-            <ion-input
-              v-model="payment.expiry"
-              type="text"
-              maxlength="5"
-              placeholder="MM/YY"
-              required
-              @input="formatExpiry"
-            ></ion-input>
-          </ion-item>
+      <!-- Rental options -->
+      <!-- <div class="rental-options">
+        <span
+          v-for="option in options"
+          :key="option"
+          :class="{ active: selectedOption === option }"
+          @click="selectedOption = option"
+        >
+          {{ option }}
+        </span>
+      </div> -->
 
-          <ion-item>
-            <ion-label position="floating">CVV</ion-label>
-            <ion-input
-              v-model="payment.cvv"
-              type="password"
-              maxlength="3"
-              minlength="3"
-              inputmode="numeric"
-              required
-            ></ion-input>
-          </ion-item>
+      <!-- Date Inputs -->
+      <div class="date-inputs">
+        <div lines="none" class="date-item" button @click="openPicker('pickup')">
+            <ion-label>Pick up Date</ion-label>
+            <ion-note slot="end">{{ formatDate(pickupDate) }}</ion-note>
 
-          <ion-button expand="block" color="primary" class="ion-margin-top" @click="submitPayment" :disabled="!isFormValid">
-            Pay Now
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-    </ion-content>
+        </div>
+
+        <div lines="none" class="date-item" button @click="openPicker('return')">
+            <ion-label>Return Date</ion-label>
+            <ion-note slot="end">{{ formatDate(returnDate) }}</ion-note>
+        </div>
+      </div>
+    </div>
+    <ion-modal 
+        :is-open="showPicker" 
+        @didDismiss="showPicker = false" 
+        id="example-modal" 
+        ref="modal" 
+        trigger="open-custom-dialog"
+      >
+        <div class="wrapper">
+          <ion-datetime
+            v-model="tempDate"
+            presentation="date"
+            :min="datePickerMode === 'return' ? pickupDate || minDate : minDate"
+            :max="datePickerMode === 'pickup' ? returnDate || maxDate : maxDate"
+          ></ion-datetime>
+        </div>
+
+        <!-- Optional validation message -->
+        <ion-text color="danger" v-if="validationError" style="padding: 0 16px;">
+          <p>{{ validationError }}</p>
+        </ion-text>
+
+        <div style="display: flex; justify-content: flex-end; padding: 10px;">
+          <ion-button fill="clear" @click="showPicker = false">Cancel</ion-button>
+          <ion-button @click="confirmDate">OK</ion-button>
+        </div>
+      </ion-modal>
   </ion-page>
 </template>
 
 <script>
+import { IonCard, IonToggle, IonDatetime, IonModal, IonItem, IonLabel, IonNote, IonContent, IonButton } from '@ionic/vue';
+import { personOutline, mailOutline, callOutline, locationOutline } from 'ionicons/icons'
+
 export default {
+  components: {
+    IonCard,
+    IonToggle,
+    IonDatetime,
+    IonModal,
+    IonItem,
+    IonLabel,
+    IonNote,
+    IonContent,
+    IonButton
+  },
   data() {
     return {
-      payment: {
-        name: '',
-        cardNumber: '',
-        expiry: '',
-        cvv: '',
-      },
+      person: personOutline,
+      mail: mailOutline,
+      call: callOutline,
+      location: locationOutline,
+      options: ['Day'],
+      // options: ['Hour', 'Day', 'Week', 'Month'],
+      selectedOption: 'Day',
+
+      // date state
+      pickupDate: '2024-01-19',
+      returnDate: '2024-01-22',
+      tempDate: new Date().toISOString(),
+      minDate: '2024-01-01',
+      maxDate: '2030-12-31',
+      showPicker: false,
+      activeField: null,
     }
   },
-  computed: {
-    isFormValid() {
-      return (
-        this.payment.name.trim() !== '' &&
-        /^\d{16}$/.test(this.payment.cardNumber.replace(/\s/g, '')) &&
-        /^\d{2}\/\d{2}$/.test(this.payment.expiry) &&
-        /^\d{3}$/.test(this.payment.cvv)
-      )
-    },
-  },
   methods: {
-    formatCardNumber() {
-      // Add spaces every 4 digits for readability
-      let val = this.payment.cardNumber.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
-      let parts = []
-      for (let i = 0; i < val.length; i += 4) {
-        parts.push(val.substring(i, i + 4))
-      }
-      this.payment.cardNumber = parts.join(' ')
+    openPicker(type) {
+      this.activeField = type
+      this.tempDate = type === 'pickup' ? this.pickupDate : this.returnDate
+      this.showPicker = true
     },
-    formatExpiry() {
-      // Format as MM/YY
-      let val = this.payment.expiry.replace(/[^0-9]/g, '')
-      if (val.length >= 3) {
-        val = val.substring(0, 2) + '/' + val.substring(2, 4)
+    confirmDate() {
+      if (this.activeField === 'pickup') {
+        this.pickupDate = this.tempDate
+      } else {
+        this.returnDate = this.tempDate
       }
-      this.payment.expiry = val
+      this.showPicker = false
     },
-    submitPayment() {
-      if (!this.isFormValid) {
-        alert('Please fill in valid payment details.')
-        return
-      }
-      // Simulate payment processing
-      alert('Payment successful! Thank you.')
-      // Reset form
-      this.payment = { name: '', cardNumber: '', expiry: '', cvv: '' }
-    },
+    formatDate(date) {
+      return new Date(date).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      })
+    }
   },
 }
 </script>
 
+<style>
+  ion-modal#example-modal {
+    --width: fit-content;
+    --min-width: 250px;
+    --height: fit-content;
+    --border-radius: 6px;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+  }
+
+
+</style>
+
 <style scoped>
-ion-card {
-  max-width: 400px;
-  margin: auto;
+
+ion-input {
+  min-height: 40px !important;
+  --background: #fff;
+  --color: #000;
+  --placeholder-color: #666;
+  --padding-start: 12px;
+  --border-radius: 12px;
+  border: 1px solid #bdbcbc;
+  border-radius: 12px;
+  text-align: start;
+}
+
+/* Rental DateTime Section */
+.rental-datetime {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 10px;
+  text-align: start;
+}
+
+.div-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 10px;
+  text-align: start;
+}
+
+.rental-options {
+  display: flex;
+  justify-content: space-between;
+  text-align: start;
+  margin-top: 5px;
+}
+
+.rental-options span {
+  border: solid 1px #bdbcbc;
+  background-color: #fff;
+  padding: 6px 15px;
+  border-radius: 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.rental-options span.active {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Pick up / Return Inputs */
+.date-inputs {
+  display: flex;
+  border: 1px solid #bdbcbc;
+  border-radius: 50px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.date-item {
+  flex: 1;
+  text-align: center;
+  border-right: 1px solid #bdbcbc;
+  background-color: #fff;
+  padding: 10px;
+  display: flex;
+  gap: 5px;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.date-item ion-label{
+  font-size: 14px;
+}
+.date-item ion-note{
+  font-size: 12px;
+}
+
+.date-item:last-child {
+  border-right: none;
+}
+</style>
+
+<style>
+.booking-details {
+  background-color: #fff !important;
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: none;
+  border: solid 1px #bdbcbc;
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.book-driver {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.book-driver span {
+  font-size: 14px;
+  text-align: start;
+}
+
+.book-driver span:first-child {
+  color: #000;
 }
 </style>
