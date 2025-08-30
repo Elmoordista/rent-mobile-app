@@ -104,6 +104,7 @@ export default {
   },
   data() {
     return {
+      // user: this.$store.getters.getUser,
       cartCount : 10,
       starIcon: star,
       cartIcon: cart,
@@ -128,6 +129,11 @@ export default {
   mounted(){
     this.handleGetCatoregories();
     this.handleGetItems();
+  },
+  computed: {
+    user() {
+      return this.$store.getters.getUser;
+    }
   },
   methods: {
     async confirmation() {
@@ -212,6 +218,9 @@ export default {
         this.handleGetItems();
       }
     },
+    'user'(newValue) {
+      console.log(newValue,'user')
+    }
   },
 }
 </script>

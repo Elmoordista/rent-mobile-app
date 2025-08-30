@@ -1,156 +1,144 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Profile Form</ion-title>
-      </ion-toolbar>
+    <ion-header class="ion-no-border ion-padding ion-text-center header" style="display: flex; align-items: center; justify-content: center;">
+      <ion-buttons slot="start" @click="handleBack">
+        <ion-icon :icon="arrowBackIcon" slot="end" />
+      </ion-buttons>
+      <ion-title>Profile</ion-title>
     </ion-header>
 
-    <ion-content class="ion-padding">
-      <form @submit.prevent="submitForm" class="profile-form">
-        <div class="profile-pic-container">
-          <img :src="profile.image" alt="Profile Picture" class="profile-pic" />
-          <ion-button expand="block" @click="changePicture">Change Picture</ion-button>
-          <input
-            type="file"
-            ref="fileInput"
-            accept="image/*"
-            style="display:none"
-            @change="onFileChange"
-          />
+
+    <ion-content>
+      <!-- Profile Info Section -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+          <ion-item lines="none">
+            <ion-avatar slot="start">
+              <img src="https://i.pravatar.cc/150?img=3" alt="Profile Picture" />
+            </ion-avatar>
+            <ion-label>
+              <h2>Benjamin Jack</h2>
+              <p>benjaminJack@gmail.com</p>
+            </ion-label>
+          </ion-item>
+          <ion-item button lines="none" @click="handleEditProfile">
+            <ion-label style="display: flex; align-items: center; flex-direction: column; gap: 5px;">
+                <ion-icon :icon="pencilOutlineIcon" style="font-size: 15px;"/>
+                <span style="font-size: 12px; white-space: nowrap;">Edit Profile</span>
+            </ion-label>
+          </ion-item>
         </div>
 
-        <ion-item>
-          <ion-label position="floating">Name</ion-label>
-          <ion-input v-model="profile.name" required></ion-input>
+      <!-- General Section -->
+      <ion-list style="margin-top: 10px;">
+        <ion-label style="margin-left: 15px; font-weight: 600;">General</ion-label>
+        <ion-item button @click="navigateToFavoriteCars" lines="none">
+          <ion-icon :icon="heartOutlineIcon" slot="start" />
+          <ion-label>Favorite Cars</ion-label>
+         <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Email</ion-label>
-          <ion-input type="email" v-model="profile.email" required></ion-input>
+        <ion-item button @click="navigateToPreviousRant" lines="none">
+          <ion-icon :icon="listOutlineIcon" slot="start" />
+          <ion-label>Previous Rant</ion-label>
+          <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Bio</ion-label>
-          <ion-textarea v-model="profile.bio"></ion-textarea>
+      </ion-list>
+      <ion-list style="margin-top: 10px;">
+         <ion-label style="margin-left: 15px; font-weight: 600;">Settings</ion-label>
+        <ion-item button @click="handleLogout" lines="none">
+          <ion-icon :icon="logOutOutlineIcon" slot="start" />
+          <ion-label>Logout</ion-label>
         </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Address</ion-label>
-          <ion-input v-model="profile.address"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Phone Number</ion-label>
-          <ion-input type="tel" v-model="profile.phone"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label>Gender</ion-label>
-          <ion-select v-model="profile.gender" placeholder="Select Gender">
-            <ion-select-option value="Female">Female</ion-select-option>
-            <ion-select-option value="Male">Male</ion-select-option>
-            <ion-select-option value="Other">Other</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Age</ion-label>
-          <ion-input type="number" v-model.number="profile.age" min="0"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="floating">Birthday</ion-label>
-          <ion-datetime
-            v-model="profile.birthday"
-            display-format="MMM DD, YYYY"
-            picker-format="MMM DD YYYY"
-          ></ion-datetime>
-        </ion-item>
-
-        <ion-button expand="block" type="submit" class="submit-btn">Save Profile</ion-button>
-      </form>
+      </ion-list>
     </ion-content>
   </ion-page>
 </template>
 
-<script setup>
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonTextarea,
-  IonSelect,
-  IonSelectOption,
-  IonDatetime,
-  IonButton,
-} from '@ionic/vue'
-
-import { ref } from 'vue'
-
-const profile = ref({
-  image: 'https://i.pravatar.cc/150?img=3',
-  name: '',
-  email: '',
-  bio: '',
-  address: '',
-  phone: '',
-  gender: '',
-  age: null,
-  birthday: ''
-})
-
-const fileInput = ref(null)
-
-function changePicture() {
-  fileInput.value.click()
-}
-
-function onFileChange(e) {
-  const file = e.target.files[0]
-  if (file) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      profile.value.image = reader.result
+<script>
+import { arrowBack, heartOutline, listOutline, chevronForwardOutline, logOutOutline, pencilSharp } from 'ionicons/icons'
+import { IonPage, IonHeader, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonButtons, IonTitle, IonLoading } from '@ionic/vue';
+export default {
+  components: {
+    IonPage,
+    IonHeader,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonAvatar,
+    IonButtons,
+    IonLoading,
+    IonTitle
+  },
+  data() {
+    return {
+      loading: true,
+      arrowBackIcon: arrowBack,
+      heartOutlineIcon: heartOutline,
+      listOutlineIcon: listOutline,
+      logOutOutlineIcon: logOutOutline,
+      pencilOutlineIcon: pencilSharp,
+      arrowForwardIcon: chevronForwardOutline
     }
-    reader.readAsDataURL(file)
+  },
+  methods: {
+    handleEditProfile() {
+      // Navigate to profile edit page
+      this.$router.push('/profile/edit');
+    },
+    navigateToFavoriteCars() {
+      // Navigate to Favorite Cars page
+      this.$router.push('/favorite-cars');
+    },
+    navigateToPreviousRant() {
+      // Navigate to Previous Rant page
+      this.$router.push('/previous-rant');
+    },
+    toggleNotification() {
+      // Toggle Notification setting (e.g., show/hide)
+      console.log('Toggle notification');
+    },
+    navigateToQentPartnerships() {
+      // Navigate to Connected QENT Partnerships page
+      this.$router.push('/qent-partnerships');
+    },
+    navigateToSettings() {
+      // Navigate to Settings page
+      this.$router.push('/settings');
+    },
+    navigateToLanguages() {
+      // Navigate to Languages page
+      this.$router.push('/languages');
+    },
+    navigateToInviteFriends() {
+      // Navigate to Invite Friends page
+      this.$router.push('/invite-friends');
+    },
+    navigateToPrivacyPolicy() {
+      // Navigate to Privacy Policy page
+      this.$router.push('/privacy-policy');
+    },
+    navigateToHelpSupport() {
+      // Navigate to Help Support page
+      this.$router.push('/help-support');
+    },
+    handleLogout() {
+      this.loading = true;
+      this.$store.dispatch('logout');
+    }
   }
-}
-
-function submitForm() {
-  console.log('Profile saved:', profile.value)
-  alert('Profile saved! Check the console for data.')
-}
+};
 </script>
 
 <style scoped>
-.profile-form {
-  max-width: 480px;
-  margin: 0 auto;
+.header {
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #fff;
 }
-
-.profile-pic-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24px;
+.profile-card {
+  margin-bottom: 20px;
 }
-
-.profile-pic {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-  margin-bottom: 12px;
-}
-
-.submit-btn {
-  margin-top: 24px;
+ion-item {
+  --inner-padding-top: 0;
+  --inner-padding-bottom: 0;
 }
 </style>

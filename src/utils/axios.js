@@ -1,6 +1,5 @@
 import axios from "axios";
 
-
 const HttpClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   timeout: 60000,
@@ -10,23 +9,23 @@ const HttpClient = axios.create({
   },
 });
 
-// HttpClient.interceptors.request.use((config) => {
-//   const token = Cookies.get('token');
-//   config.headers = {
-//     ...config.headers,
-//     Authorization: `Bearer ${token}`,
-//   };
-//   return config;
-// });
+HttpClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  config.headers = {
+    ...config.headers,
+    Authorization: `Bearer ${token}`,
+  };
+  return config;
+});
 
 // Cookies.remove('company_id');
 
 const responseErrorInterceptor = (error) => {
-  // if ((error.response && error.response.status == 401)) {
-  //   // if ((error.response && error.response.status == 401) || error.code == "ERR_NETWORK" || error.code == "ERR_BAD_RESPONSE") {
-  //     Cookies.remove('token');
-  //     window.location.href = '/login';
-  // }
+  if ((error.response && error.response.status == 401)) {
+    // if ((error.response && error.response.status == 401) || error.code == "ERR_NETWORK" || error.code == "ERR_BAD_RESPONSE") {
+      localStorage.removeItem('token');
+      // window.location.href = '/login';
+  }
   if ((error.response && error.response.data.message)) {
      console.log(error.response.data.message)
   }

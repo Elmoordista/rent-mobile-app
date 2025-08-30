@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router';
+import store from './utils/store.js';
 
 import { IonicVue } from '@ionic/vue';
 
@@ -38,11 +39,17 @@ import './theme/variables.css';
 import VueAxios from 'vue-axios'
 import axios from './utils/axios.js'; // Use the custom axios instance
 
+const token = localStorage.getItem('token');
+if (token) {
+  // Dispatch the action to fetch user info
+  store.dispatch('getInfoUser', token);
+}
 
 
 const app = createApp(App)
   .use(IonicVue)
   .use(router)
+  .use(store)
   .use(VueAxios, axios)
 
 router.isReady().then(() => {
