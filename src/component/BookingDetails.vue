@@ -24,6 +24,28 @@
         </ion-item>
       </ion-radio-group>
     </ion-card>
+    <ion-card class="delivery-option">
+      <ion-item>
+        <ion-label>Payment Type</ion-label>
+      </ion-item>
+
+      <ion-radio-group v-model="paymentType">
+        <ion-item>
+          <ion-label>Cash on Delivery</ion-label>
+          <ion-radio slot="start" value="cod"></ion-radio>
+        </ion-item>
+
+        <!-- <ion-item>
+          <ion-label>Credit/Debit Card</ion-label>
+          <ion-radio slot="start" value="card"></ion-radio>
+        </ion-item> -->
+
+        <ion-item>
+          <ion-label>Gcash / E-Wallet</ion-label>
+          <ion-radio slot="start" value="ewallet"></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+    </ion-card>
     <!-- Customer Info -->
     <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
       <ion-input label-placement="stacked" placeholder="Full name">

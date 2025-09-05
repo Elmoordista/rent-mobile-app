@@ -47,16 +47,18 @@
             <BookingDetails />
           </template>
           <template v-if="currentStep === 1">
-            <PaymentMethods />
-          </template>
-          <template v-if="currentStep === 2">
             <Confirmation />
+
           </template>
+          <!-- <template v-if="currentStep === 2">
+            <Confirmation />
+          </template> -->
       </div>
     </ion-content>
 
     <!-- Fixed footer with Continue button -->
-    <ion-footer>
+     
+    <ion-footer v-if="currentStep < slides.length - 1" class="ion-no-border">
       <ion-toolbar>
         <ion-button
           color="dark"
@@ -68,6 +70,20 @@
           style="margin: 0 16px;"
         >
           Continue
+        </ion-button>
+      </ion-toolbar>
+    </ion-footer>
+     <ion-footer class="ion-no-border" v-if="currentStep === 1">
+      <ion-toolbar>
+        <ion-button
+          color="dark"
+          shape="round"
+          expand="block"
+          class="book-button"
+          @click="handleOrderPlace"
+          style="margin: 0 16px;"
+        >
+          Place Order
         </ion-button>
       </ion-toolbar>
     </ion-footer>
@@ -98,11 +114,15 @@ export default {
   data() {
     return {
     arrowBackIcon: arrowBack,
-    slides: ['Booking Details', 'Payment Methods', 'Confirmation'],
+    slides: ['Booking Details', 'Confirmation'],
+    // slides: ['Booking Details', 'Payment Methods', 'Confirmation'],
     currentStep: 0,
     };
   },
   methods: {
+    handleOrderPlace() {
+      this.$router.push('/success-order');
+    },
     handleBack() {
       if (this.currentStep > 0) {
         this.currentStep--;
@@ -179,7 +199,7 @@ export default {
 }
 
 .step-line {
-  width: 80px; /* fixed width for line */
+  width: 230px; /* fixed width for line */
   height: 2px;
   background-color: #ccc;
   margin: 0 10px; /* space around the line */

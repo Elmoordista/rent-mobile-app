@@ -127,11 +127,6 @@ export default {
       console.log("Redirecting to forgot password page...");
     }
   },
-  watch: {
-    'email'(newValue) {
-     console.log(newValue,'newValue')
-    },
-  },
 }
 </script>
 

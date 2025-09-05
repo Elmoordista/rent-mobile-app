@@ -9,6 +9,8 @@ import PageIndigator from '../pages/PageIndigator.vue';
 import ProfileEditPage from '../pages/ProfileEditPage.vue';
 import ReviewsPage from '../pages/ReviewsPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
+import CartPage from '../pages/CartPage.vue';
+import SuccessOrderPage from '../pages/SuccessOrderPage.vue';
 
 const routes = [
   {
@@ -39,6 +41,16 @@ const routes = [
     path: '/page-indicator',
     name: 'PageIndicator',
     component: PageIndigator
+  },
+  {
+    path: '/cart',
+    name: 'CartPage',
+    component: CartPage
+  },
+  {
+    path: '/success-order',
+    name: 'SuccessOrderPage',
+    component: SuccessOrderPage
   },
   {
     path: '/landing-page',

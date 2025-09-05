@@ -161,6 +161,9 @@ export default {
 
       await alert.present()
     },
+    handleOpenCart() {
+      this.$router.push('/cart');
+    },
     handleFetchItemsByCategory(categoryId) {
       this.categorySelected = categoryId;
       this.handleGetItems();
@@ -179,7 +182,7 @@ export default {
               return {
                 id:item.id,
                 name:item.name,
-                price:item.price,
+                price:item.price_per_day,
                 image:item.images[0]?.image_url || 'https://via.placeholder.com/150' // Default image if none
               }
             });
