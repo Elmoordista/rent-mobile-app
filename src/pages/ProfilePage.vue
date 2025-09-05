@@ -41,6 +41,11 @@
           <ion-label>Previous Rant</ion-label>
           <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
+        <ion-item button @click="navigateToPendingOrders" lines="none">
+          <ion-icon :icon="cartOutlineIcon" slot="start" />
+          <ion-label>Pending Orders</ion-label>
+          <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
+        </ion-item>
       </ion-list>
       <ion-list style="margin-top: 10px;">
          <ion-label style="margin-left: 15px; font-weight: 600;">Settings</ion-label>
@@ -54,7 +59,7 @@
 </template>
 
 <script>
-import { arrowBack, heartOutline, listOutline, chevronForwardOutline, logOutOutline, pencilSharp } from 'ionicons/icons'
+import { arrowBack, heartOutline, listOutline, chevronForwardOutline, logOutOutline, pencilSharp, cartOutline } from 'ionicons/icons'
 import { IonPage, IonHeader, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonButtons, IonTitle, IonLoading } from '@ionic/vue';
 export default {
   components: {
@@ -74,6 +79,7 @@ export default {
       loading: true,
       arrowBackIcon: arrowBack,
       heartOutlineIcon: heartOutline,
+      cartOutlineIcon: cartOutline,
       listOutlineIcon: listOutline,
       logOutOutlineIcon: logOutOutline,
       pencilOutlineIcon: pencilSharp,
@@ -88,6 +94,10 @@ export default {
     navigateToFavoriteCars() {
       // Navigate to Favorite Cars page
       this.$router.push('/favorite-cars');
+    },
+    navigateToPendingOrders() {
+      // Navigate to Pending Orders page
+      this.$router.push('/pending-order');
     },
     navigateToPreviousRant() {
       // Navigate to Previous Rant page

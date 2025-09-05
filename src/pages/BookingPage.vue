@@ -1,7 +1,7 @@
 <template>
   <ion-page>
-    <ion-header class="ion-no-border ion-padding ion-text-center header" style="display: flex; align-items: center; justify-content: center;">
-      <ion-title>Car Rental History</ion-title>
+    <ion-header class="ion-no-border ion-padding ion-text-center">
+      <ion-title>Booking History</ion-title>
     </ion-header>
 
     <ion-content class="ion-padding">
@@ -13,7 +13,6 @@
         <ion-segment-button value="cancelled">Cancelled</ion-segment-button>
       </ion-segment>
 
-      <!-- Booking List -->
       <ion-list style="background: transparent;">
         <ion-item v-for="booking in filteredBookings" :key="booking.id" class="booking-card">
           <ion-thumbnail slot="start">
@@ -41,31 +40,15 @@
 </template>
 
 <script>
-import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, IonThumbnail
-} from '@ionic/vue'
+import { IonPage, IonHeader, IonTitle, IonContent, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, IonThumbnail } from '@ionic/vue'
 
 export default {
-  name: 'CarBookingHistory',
-  components: {
-    IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-    IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, IonThumbnail
-  },
+  name: 'BookingHistory',
+  components: { IonPage, IonHeader, IonTitle, IonContent, IonList, IonItem, IonLabel, IonSegment, IonSegmentButton, IonThumbnail },
   data() {
     return {
       selectedFilter: 'all',
       bookings: [
-        {
-          id: 1,
-          carModel: 'Toyota Vios',
-          image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png',
-          pickupDate: '2025-09-05T09:00:00',
-          returnDate: '2025-09-07T18:00:00',
-          paymentType: 'Credit Card',
-          dailyPrice: 2000,
-          status: 'Completed',
-        },
         {
           id: 2,
           carModel: 'Honda Civic',
@@ -86,20 +69,26 @@ export default {
           dailyPrice: 3000,
           status: 'Active',
         },
-      ],
+        {
+          id: 5,
+          carModel: 'Toyota Fortuner',
+          image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png',
+          pickupDate: '2025-09-01T07:00:00',
+          returnDate: '2025-09-03T19:00:00',
+          paymentType: 'Credit Card',
+          dailyPrice: 3500,
+          status: 'Completed',
+        },
+      ]
     }
   },
   computed: {
     filteredBookings() {
       switch (this.selectedFilter) {
-        case 'active':
-          return this.bookings.filter(b => b.status === 'Active')
-        case 'completed':
-          return this.bookings.filter(b => b.status === 'Completed')
-        case 'cancelled':
-          return this.bookings.filter(b => b.status === 'Cancelled')
-        default:
-          return this.bookings
+        case 'active': return this.bookings.filter(b => b.status === 'Active')
+        case 'completed': return this.bookings.filter(b => b.status === 'Completed')
+        case 'cancelled': return this.bookings.filter(b => b.status === 'Cancelled')
+        default: return this.bookings
       }
     }
   },
@@ -122,45 +111,10 @@ export default {
 </script>
 
 <style scoped>
-ion-content {
-  --background: #f5f5f5; /* light gray */
-}
-
-.booking-card {
-  background-color: #fff;
-  border-radius: 12px;
-  margin: 12px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: transform 0.2s;
-}
-
-.booking-card:hover {
-  transform: translateY(-2px);
-}
-
-.car-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 6px;
-}
-
-.status-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: #fff;
-}
-
-.status-badge.active {
-  background-color: #28a745;
-}
-
-.status-badge.completed {
-  background-color: #007bff;
-}
-
-.status-badge.cancelled {
-  background-color: #dc3545;
-}
+.booking-card { background-color: #fff; border-radius: 12px; margin: 12px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+.car-thumb { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+.status-badge { padding: 2px 8px; border-radius: 12px; font-size: 12px; color: #fff; }
+.status-badge.active { background-color: #28a745; }
+.status-badge.completed { background-color: #007bff; }
+.status-badge.cancelled { background-color: #dc3545; }
 </style>

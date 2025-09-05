@@ -11,6 +11,7 @@ import ReviewsPage from '../pages/ReviewsPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
 import CartPage from '../pages/CartPage.vue';
 import SuccessOrderPage from '../pages/SuccessOrderPage.vue';
+import PendingOrderPage from '../pages/PendingOrderPage.vue';
 
 const routes = [
   {
@@ -51,6 +52,11 @@ const routes = [
     path: '/success-order',
     name: 'SuccessOrderPage',
     component: SuccessOrderPage
+  },
+  {
+    path: '/pending-order',
+    name: 'PendingOrderPage',
+    component: PendingOrderPage
   },
   {
     path: '/landing-page',
