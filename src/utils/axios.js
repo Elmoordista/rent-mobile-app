@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const HttpClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: 'https://rentapp-api.onrender.com/api' || 'http://localhost:8000/api',
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",

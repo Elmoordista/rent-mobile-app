@@ -3,7 +3,7 @@
     <ion-content>
         <div style="display: flex; justify-content: center; align-items: center;">
             <!-- Logo -->
-            <img src="/3pf_logo.jpg" alt="Logo" height="100" />
+            <img src="/3pf_logo.png" alt="Logo" height="130" />
         </div>
 
         <div style="display: flex; margin-top: 20px; flex-direction: column; gap: 16px; padding: 0 16px;">

@@ -118,15 +118,7 @@ export default {
         text: 'All'
       },],
       categorySelected: 0,
-      items: [
-        { name: 'Toyota Wigo', price: 5000, image: 'https://purepng.com/public/uploads/large/purepng.com-toyota-land-cruiser-white-carcarvehicletransporttoyota-961524668359oxuc6.png' },
-        { name: 'Toyota Rush', price: 6000, image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png' },
-        { name: 'Toyota Fortuner', price: 7000, image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-Transparent-File.png' },
-        { name: 'Mitsubishi Montero', price: 7200, image: 'https://www.pngplay.com/wp-content/uploads/8/White-Toyota-Car-Background-PNG-Image.png' },
-        { name: 'Suzuki Ertiga', price: 5300, image: 'https://purepng.com/public/uploads/large/purepng.com-toyota-land-cruiser-white-carcarvehicletransporttoyota-961524668359oxuc6.png' },
-        { name: 'Hyundai Stargazer', price: 5800, image: 'https://purepng.com/public/uploads/large/purepng.com-blue-toyota-rav4-hybrid-carcarvehicletransporttoyota-961524645526athex.png' },
-        { name: 'Ford Everest', price: 7500, image: 'https://www.transparentpng.com/thumb/toyota/b5xANO-toyota-background.png' },
-      ]
+      items: [],
     }
   },
   mounted(){
