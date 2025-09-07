@@ -7,7 +7,7 @@
       <ion-title>Cart Page</ion-title>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <ion-content >
       <ion-card v-if="!items.length">
         <ion-card-header>
           <ion-card-title>Your cart is empty</ion-card-title>
@@ -20,7 +20,7 @@
       <ion-list v-else>
         <ion-item v-for="(item, idx) in items" :key="item.id" lines="full">
           <!-- Selection checkbox -->
-          <ion-checkbox slot="start" v-model="item.selected"></ion-checkbox>
+          <ion-checkbox slot="start" v-model="item.selected" @ionChange="handleCheckboxChange(item)"></ion-checkbox>
 
           <ion-thumbnail slot="start">
             <img :src="item.image || placeholder" :alt="item.name" class="cart-thumb" />
@@ -40,12 +40,28 @@
             <p class="mt-1">Subtotal: ₱{{ formatCurrency(itemSubtotal(item)) }}</p>
           </ion-label>
 
-          <ion-button slot="end" color="danger" size="small" fill="clear" @click="removeItem(idx)">
+          <ion-button color="danger" size="small" fill="clear" @click="removeItem(item.id)">
             Remove
           </ion-button>
         </ion-item>
       </ion-list>
     </ion-content>
+
+    <ion-toast
+      :is-open="showToast"
+      :message="message"
+      duration="2000"
+      color="success"
+      position="top"
+      style="color: #fff;"
+      @did-dismiss="showToast = false"
+    ></ion-toast>
+
+    <ion-loading
+      :is-open="submitLoading"
+      message="Processing..."
+      spinner="crescent"
+    ></ion-loading>
 
     <!-- Fixed Checkout Footer -->
     <ion-footer v-if="selectedItems.length">
@@ -55,7 +71,7 @@
             <p class="subtotal-label">Total:</p>
             <p class="subtotal-amount">₱{{ formatCurrency(selectedSubtotal) }}</p>
           </div>
-          <ion-button expand="block" color="dark">
+          <ion-button expand="block" color="dark" @click="handleCheckout">
             Checkout ({{ selectedItems.length }})
           </ion-button>
         </div>
@@ -82,9 +98,12 @@ import {
   IonButton,
   IonNote,
   IonCheckbox,
+  IonLoading,
+  IonToast, IonButtons, IonIcon, IonFooter,
 } from '@ionic/vue'
 
 import { arrowBackOutline } from 'ionicons/icons'
+
 
 export default {
   name: 'CartPage',
@@ -104,12 +123,17 @@ export default {
     IonThumbnail,
     IonButton,
     IonNote,
+    IonLoading,
     IonCheckbox,
+    IonToast, IonButtons, IonIcon, IonFooter,
   },
   data() {
     return {
       placeholder: 'https://via.placeholder.com/128x128.png?text=Item',
       arrowBackIcon: arrowBackOutline,
+      showToast: false,
+      submitLoading: false,
+      message: '',
       items: [
         { id: 1, name: 'Mirrorless Camera', pricePerDay: 800, qty: 1, image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png', selected: true },
         { id: 2, name: 'Carbon Tripod', pricePerDay: 150, qty: 2, image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png', selected: false },
@@ -125,7 +149,38 @@ export default {
     selectedSubtotal() {
       return this.selectedItems.reduce((sum, item) => sum + this.itemSubtotal(item), 0)
     },
+    item_to_rent() {
+      return this.$store.state.item_to_rent;
+    },
+    cartItems() {
+      return this.$store.getters.getCart.map((item)=>{
+        return {
+          id: item.id,
+          item_id: item.item.id,
+          name: item.item.name,
+          pricePerDay: item.item.price_per_day,
+          qty: item.quantity,
+          image: item.item.images.length ? item.item.images[0].image_url :'',
+          selected: false, // Default to not selected
+        }
+      });  // Access cart from Vuex store
+    },
   },
+
+  
+
+  mounted() {
+    this.items = this.cartItems;
+    if(this.item_to_rent && this.item_to_rent.length){
+      // If there are items to rent, mark them as selected in the cart
+      this.items.forEach(cartItem => {
+        if (this.item_to_rent.some(rentItem => rentItem.id === cartItem.id)) {
+          cartItem.selected = true;
+        }
+      });
+    }
+  },
+  
   methods: {
     handleBack() {
       this.$router.back()
@@ -137,15 +192,74 @@ export default {
       return n.toLocaleString('en-PH', { maximumFractionDigits: 0 })
     },
     removeItem(idx) {
-      this.items.splice(idx, 1)
+      this.handleRemove(idx);
+    },
+    handleRemove(cart_id) {
+      this.submitLoading = true;
+      this.axios.delete(`/cart/${cart_id}`).then((res) => {
+        if(res.data.success) {
+          const find_index = this.items.findIndex(item => item.id === cart_id);
+          if (find_index !== -1) {
+            this.items.splice(find_index, 1)
+          }
+          this.showToast = true;
+          this.message = 'Item Removed from cart, Successfully!';
+          this.$store.dispatch('getCart'); // Refresh cart in Vuex store
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.submitLoading = false;
+      })
+    },
+    formatDate(date) {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(date).toLocaleDateString(undefined, options);
     },
     increaseQty(item) {
       item.qty++
+      this.handleUpdateCartQty(item.id, item.qty);
     },
     decreaseQty(item) {
       if (item.qty > 1) {
         item.qty--
+        this.handleUpdateCartQty(item.id, item.qty);
       }
+    },
+    // if uncheck remove always from item_to_rent
+    // if check add to item_to_rent
+    handleCheckboxChange(item) {
+      if(!item.selected){
+        this.$store.commit('removeItemToRent', item.id);
+        return;
+      }
+    },
+    handleCheckout() {
+      // Proceed to checkout with selected items
+      const itemsToRent = this.selectedItems.map(item => ({
+        cart_id: item.id,
+        item_id: item.item_id,
+        name: item.name,
+        pricePerDay: item.pricePerDay,
+        qty: item.qty,
+        image: item.image,
+      }));
+      // Store selected items in Vuex store
+      itemsToRent.forEach(item => {
+        this.$store.commit('setItemToRent', item);
+      });
+      this.$router.push('/page-indicator');
+    },
+    handleUpdateCartQty(cart_id, qty) {
+      this.axios.put(`/cart/${cart_id}`, { quantity: qty }).then((res) => {
+        if(res.data.success) {
+          this.$store.dispatch('getCart'); // Refresh cart in Vuex store
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.submitLoading = false;
+      })
     },
   },
 }
@@ -153,7 +267,7 @@ export default {
 
 <style scoped>
 ion-content {
-  ---background: #f9f9f9;
+  --background: #f9f9f9;
 }
 
 ion-thumbnail {

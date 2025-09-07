@@ -12,6 +12,9 @@ import LoginPage from '../pages/LoginPage.vue';
 import CartPage from '../pages/CartPage.vue';
 import SuccessOrderPage from '../pages/SuccessOrderPage.vue';
 import PendingOrderPage from '../pages/PendingOrderPage.vue';
+import AddReviewPage from '../pages/AddReviewPage.vue';
+import SignUpPage from '../pages/SignUpPage.vue';
+import FavoritePage from '../pages/FavoritePage.vue';
 
 const routes = [
   {
@@ -29,9 +32,24 @@ const routes = [
     component: LoginPage
   },
   {
+    path: '/add-review/:id',
+    name: 'AddReviewPage',
+    component: AddReviewPage
+  },
+  {
+    path: '/favorites',
+    name: 'FavoritePage',
+    component: FavoritePage
+  },
+  {
     path: '/profile/edit',
     name: 'ProfileEditPage',
     component: ProfileEditPage
+  },
+  {
+    path: '/sign-up',
+    name: 'SignUpPage',
+    component: SignUpPage
   },
    {
     path: '/reviews/:id',

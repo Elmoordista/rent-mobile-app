@@ -14,7 +14,7 @@
         <ion-label>Delivery Option</ion-label>
       </ion-item>
 
-      <ion-radio-group v-model="booking.deliveryOption" disabled>
+      <ion-radio-group :value="booking.deliveryOption" v-model="booking.deliveryOption" disabled>
         <ion-item>
           <ion-label>Pickup</ion-label>
           <ion-radio slot="start" value="pickup"></ion-radio>
@@ -32,14 +32,14 @@
         <ion-label>Payment Type</ion-label>
       </ion-item>
 
-      <ion-radio-group v-model="booking.paymentType" disabled>
+      <ion-radio-group :value="booking.paymentType" v-model="booking.paymentType" disabled>
         <ion-item>
           <ion-label>Cash on Delivery</ion-label>
           <ion-radio slot="start" value="cod"></ion-radio>
         </ion-item>
         <ion-item>
           <ion-label>Gcash / E-Wallet</ion-label>
-          <ion-radio slot="start" value="ewallet"></ion-radio>
+          <ion-radio slot="start" value="gcash"></ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-card>
@@ -49,10 +49,9 @@
       <ion-item>
         <ion-label>Customer Info</ion-label>
       </ion-item>
-
       <ion-list lines="none">
         <ion-item>
-          <ion-label>Full Name: {{ booking.fullName }}</ion-label>
+          <ion-label>Full Name: {{ booking.full_name }}</ion-label>
         </ion-item>
         <ion-item>
           <ion-label>Email: {{ booking.email }}</ion-label>
@@ -75,19 +74,21 @@
       <div class="date-inputs">
         <div class="date-item">
           <ion-label>Pick up Date</ion-label>
-          <ion-note>{{ formatDate(booking.pickupDate) }}</ion-note>
+          <ion-note style="color:#000">{{ formatDate(booking.pickupDate) }}</ion-note>
         </div>
         <div class="date-item">
           <ion-label>Return Date</ion-label>
-          <ion-note>{{ formatDate(booking.returnDate) }}</ion-note>
+          <ion-note style="color:#000">{{ formatDate(booking.returnDate) }}</ion-note>
         </div>
       </div>
     </ion-card>
-
     <!-- Total -->
     <ion-card class="delivery-option">
       <ion-item>
-        <ion-label>Total Price: ₱{{ booking.totalPrice }}</ion-label>
+        <ion-label>Total Price: ₱{{ booking.totalPrice ? priceAddComma(booking.totalPrice) : 0 }}</ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-label>Total Days: {{ total_days }} day(s)</ion-label>
       </ion-item>
     </ion-card>
 
@@ -96,23 +97,50 @@
 </template>
 
 <script>
+
 export default {
   data() {
     return {
+      total_days: 1,
       booking: {
+        book_with_driver: false,
         deliveryOption: 'pickup',
         paymentType: 'cod',
-        fullName: 'John Doe',
-        email: 'john@example.com',
-        phone: '+639123456789',
-        address: '123 Main St, Manila',
-        pickupDate: '2025-09-05T09:00:00',
-        returnDate: '2025-09-07T18:00:00',
-        totalPrice: 4000,
+        pickupDate: new Date().toISOString(),
+        returnDate: new Date(Date.now() + 86400000).toISOString(), // now + 1 day
+        email: '',
+        phone: '',
+        address: '',
+        full_name: '',
       },
     }
   },
+  computed: {
+    bookingDetails() {
+      return this.$store.state.booking_details;
+    },
+    item_to_rent() {
+      return this.$store.state.item_to_rent;
+    },
+  },
+  mounted() {
+    if(this.bookingDetails){
+      this.booking = { ...this.bookingDetails};
+      const pickup = new Date(this.booking.pickupDate);
+      const returnD = new Date(this.booking.returnDate);
+      const diffTime = Math.abs(returnD - pickup);
+      this.total_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Include both pickup and return days
+      if(this.total_days < 1) this.total_days = 1;
+    }
+    if(this.item_to_rent && this.item_to_rent.length){
+      const total = this.item_to_rent.filter(item => item.qty).reduce((sum, item) => sum + (item.pricePerDay * item.qty), 0);
+      this.booking.totalPrice = total * this.total_days;
+    }
+  },
   methods: {
+    priceAddComma(price){
+      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    },
     formatDate(dateStr) {
       return new Date(dateStr).toLocaleDateString('en-GB', {
         day: '2-digit',
@@ -129,6 +157,9 @@ export default {
 </script>
 
 <style scoped>
+ion-item{
+  --background : #fff !important;
+}
 .delivery-option {
   background-color: #fff !important;
   margin: 0;
@@ -165,14 +196,17 @@ export default {
 
 .date-inputs {
   display: flex;
-  gap: 10px;
+  gap: 5px;
   margin-top: 10px;
 }
 
 .date-item {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: #ebebeb;
+  color: #000;
   padding: 10px;
   border-radius: 12px;
 }

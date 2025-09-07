@@ -43,9 +43,12 @@
                   </div>
                   <hr style="background-color: #f5f5f5; margin: 0;"/>
                   <div class="item-details">
-                    <span class="item-name">{{ item.name }}</span>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="item-name">{{ item.name }}</span>
+                      <ion-icon v-if="item.is_favorite" :icon="heartOutlineIcon" size="small" style="color: red;"/>
+                    </div>
                     <div class="item-rating">
-                      <span>5.0</span>
+                      <span>{{ item.reviews_avg_rating ? parseInt(item.reviews_avg_rating) : 0 }}</span>
                       <ion-icon :icon="starIcon" class="star-icon" />
                     </div>
                     <div class="price-book">
@@ -79,8 +82,8 @@
 </template>
 
 <script>
-import { star, cart } from 'ionicons/icons'
-import { alertController } from '@ionic/vue'
+import { star, cart, heart } from 'ionicons/icons'
+import { alertController,  } from '@ionic/vue'
 
 import { IonPage, IonBadge, IonHeader, IonTitle, IonContent, IonSearchbar, IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton, IonLoading  } from '@ionic/vue';
 export default {
@@ -105,9 +108,9 @@ export default {
   data() {
     return {
       // user: this.$store.getters.getUser,
-      cartCount : 10,
       starIcon: star,
       cartIcon: cart,
+      heartOutlineIcon: heart,
       loading_item: false,
       searchText: '',
       categories: [{
@@ -129,12 +132,17 @@ export default {
   mounted(){
     this.handleGetCatoregories();
     this.handleGetItems();
+    //clear booking details and item to rent
   },
   computed: {
     user() {
       return this.$store.getters.getUser;
+    },
+    cartCount() {
+      return this.$store.getters.getCart.length;
     }
   },
+  
   methods: {
     async confirmation() {
       const alert = await alertController.create({
@@ -181,6 +189,8 @@ export default {
             const allItems = res.data.data.map((item)=>{
               return {
                 id:item.id,
+                reviews_avg_rating : item.reviews_avg_rating,
+                is_favorite: item.is_favorite,
                 name:item.name,
                 price:item.price_per_day,
                 image:item.images[0]?.image_url || 'https://via.placeholder.com/150' // Default image if none

@@ -44,6 +44,7 @@ const token = localStorage.getItem('token');
 if (token) {
   // Dispatch the action to fetch user info
   store.dispatch('getInfoUser', token);
+  store.dispatch('getCart', token);
 }
 
 

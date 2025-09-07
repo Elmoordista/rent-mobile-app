@@ -1,18 +1,17 @@
 <template>
   <ion-page class="ion-page-wrapper booking-details-wrapper">
-    <ion-card class="booking-details">
-      <div class="book-driver">
+    <ion-card class="booking-details"  style="margin-top: 0 !important;">
+      <div class="book-driver" >
         <span>Book With Driver</span>
         <span>Don't have a driver, book a driver.</span>
       </div>
-      <ion-toggle></ion-toggle>
+      <ion-toggle v-model="booking_details.book_with_driver"></ion-toggle>
     </ion-card>
     <ion-card class="delivery-option">
       <ion-item>
         <ion-label>Delivery Option</ion-label>
       </ion-item>
-
-      <ion-radio-group v-model="deliveryOption">
+      <ion-radio-group :value="booking_details.deliveryOption" v-model="booking_details.deliveryOption">
         <ion-item>
           <ion-label>Pickup</ion-label>
           <ion-radio slot="start" value="pickup"></ion-radio>
@@ -29,7 +28,7 @@
         <ion-label>Payment Type</ion-label>
       </ion-item>
 
-      <ion-radio-group v-model="paymentType">
+      <ion-radio-group :value="booking_details.paymentType" v-model="booking_details.paymentType">
         <ion-item>
           <ion-label>Cash on Delivery</ion-label>
           <ion-radio slot="start" value="cod"></ion-radio>
@@ -42,34 +41,34 @@
 
         <ion-item>
           <ion-label>Gcash / E-Wallet</ion-label>
-          <ion-radio slot="start" value="ewallet"></ion-radio>
+          <ion-radio slot="start" value="gcash"></ion-radio>
         </ion-item>
       </ion-radio-group>
     </ion-card>
     <!-- Customer Info -->
     <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-      <ion-input label-placement="stacked" placeholder="Full name">
+      <ion-input v-model="booking_details.full_name" type="text"  placeholder="Full name">
         <ion-icon slot="start" :icon="person" aria-hidden="true"></ion-icon>
       </ion-input>
-      <ion-input label-placement="stacked" placeholder="Email address">
+      <ion-input v-model="booking_details.email" type="text" placeholder="Email address">
         <ion-icon slot="start" :icon="mail" aria-hidden="true"></ion-icon>
       </ion-input>
-      <ion-input label-placement="stacked" placeholder="Phone number">
+      <ion-input v-model="booking_details.phone"  @keydown="isNumber($event)" type="text" placeholder="Phone number">
         <ion-icon slot="start" :icon="call" aria-hidden="true"></ion-icon>
       </ion-input>
-      <ion-input label-placement="stacked" placeholder="Address">
+      <ion-input v-model="booking_details.address" type="text" placeholder="Address">
         <ion-icon slot="start" :icon="location" aria-hidden="true"></ion-icon>
       </ion-input>
     </div>
     
     <!-- Requirements -->
 
-    <div class="div-wrapper">
+    <!-- <div class="div-wrapper">
       <span>Driver Licence :</span>
       <div>
-        <ion-input id="driver-license" label-placement="stacked" placeholder="Enter your requirements" type="file"></ion-input>
+        <ion-input id="driver-license"  placeholder="Enter your requirements" type="file"></ion-input>
       </div>
-    </div>
+    </div> -->
 
     <!-- Rental Date & Time -->
     <div class="rental-datetime">
@@ -91,13 +90,13 @@
       <div class="date-inputs">
         <div lines="none" class="date-item" button @click="openPicker('pickup')">
             <ion-label>Pick up Date</ion-label>
-            <ion-note slot="end">{{ formatDate(pickupDate) }}</ion-note>
+            <ion-note slot="end">{{ formatDate(booking_details.pickupDate) }}</ion-note>
 
         </div>
 
         <div lines="none" class="date-item" button @click="openPicker('return')">
             <ion-label>Return Date</ion-label>
-            <ion-note slot="end">{{ formatDate(returnDate) }}</ion-note>
+            <ion-note slot="end">{{ formatDate(booking_details.returnDate) }}</ion-note>
         </div>
       </div>
     </div>
@@ -106,14 +105,13 @@
         @didDismiss="showPicker = false" 
         id="example-modal" 
         ref="modal" 
-        trigger="open-custom-dialog"
       >
         <div class="wrapper">
           <ion-datetime
             v-model="tempDate"
             presentation="date"
-            :min="datePickerMode === 'return' ? pickupDate || minDate : minDate"
-            :max="datePickerMode === 'pickup' ? returnDate || maxDate : maxDate"
+            :min="datePickerMode === 'return' ? booking_details.pickupDate || minDate : minDate"
+            :max="datePickerMode === 'pickup' ? booking_details.returnDate || maxDate : maxDate"
           ></ion-datetime>
         </div>
 
@@ -131,19 +129,21 @@
 </template>
 
 <script>
-import { IonCard, IonToggle, IonDatetime, IonModal, IonItem, IonLabel, IonNote, IonContent, IonButton } from '@ionic/vue';
+import { IonCard, IonText, IonRadioGroup, IonInput, IonToggle, IonDatetime, IonModal, IonItem, IonLabel, IonNote, IonButton } from '@ionic/vue';
 import { personOutline, mailOutline, callOutline, locationOutline } from 'ionicons/icons'
 
 export default {
   components: {
     IonCard,
     IonToggle,
+    IonText,
     IonDatetime,
     IonModal,
     IonItem,
     IonLabel,
     IonNote,
-    IonContent,
+    IonRadioGroup,
+    IonInput,
     IonButton
   },
   data() {
@@ -157,16 +157,58 @@ export default {
       selectedOption: 'Day',
 
       // date state
-      pickupDate: '2024-01-19',
-      returnDate: '2024-01-22',
       tempDate: new Date().toISOString(),
-      minDate: '2024-01-01',
-      maxDate: '2030-12-31',
+      minDate: new Date().toISOString(),
+      maxDate: new Date(Date.now() + 2592000000).toISOString(), // plus 1 month
       showPicker: false,
       activeField: null,
+      validationError: '',
+      booking_details: {
+          book_with_driver: false,
+          deliveryOption: 'pickup',
+          paymentType: 'cod',
+          pickupDate: new Date().toISOString(),
+          returnDate: new Date(Date.now() + 86400000).toISOString(), // now + 1 day
+          email: '',
+          phone: '',
+          address: '',
+          full_name: '',
+      },
+      errors: {
+        full_name: '',
+        email: '',
+        phone: '',
+        address: '',
+      }
     }
   },
+  computed: {
+    bookingDetails() {
+      return this.$store.state.booking_details;
+    },
+  },
+  mounted() {
+    // console.log(this.bookingDetails,'xxxx')
+    if(this.bookingDetails){
+      this.booking_details = { ...this.bookingDetails};
+    }
+    // const existingDetails = this.$store.state.booking_details;
+    // if (existingDetails && Object.keys(existingDetails).length) {
+    //   this.booking_details = { ...this.booking_details, ...existingDetails };
+    // }
+  },
   methods: {
+    isNumber(e){
+        const keysAllowed = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', 'Backspace'];
+        const keyPressed = e.key;
+
+        if (!keysAllowed.includes(keyPressed)) {
+            e.preventDefault()
+        }
+    },
+    emitBooking() {
+      this.$emit('setBookingDetails', { ...this.booking_details });
+    },
     openPicker(type) {
       this.activeField = type
       this.tempDate = type === 'pickup' ? this.pickupDate : this.returnDate
@@ -174,9 +216,9 @@ export default {
     },
     confirmDate() {
       if (this.activeField === 'pickup') {
-        this.pickupDate = this.tempDate
+        this.booking_details.pickupDate = this.tempDate
       } else {
-        this.returnDate = this.tempDate
+        this.booking_details.returnDate = this.tempDate
       }
       this.showPicker = false
     },
@@ -188,6 +230,18 @@ export default {
       })
     }
   },
+
+  watch: {
+    booking_details: {
+      handler(oldVal, newVal) {
+        if(newVal != undefined){
+          this.$store.commit('setBookingDetails', this.booking_details);
+        }
+      },
+      deep: true,
+      immediate: true,
+    },
+  }
 }
 </script>
 
@@ -307,6 +361,7 @@ ion-input {
 </style>
 
 <style>
+
 
 .booking-details {
   background-color: #fff !important;

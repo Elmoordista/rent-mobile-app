@@ -2,3 +2,18 @@
   border-bottom: 1px solid #e0e0e0;
   background-color: #fff;
 }
+
+.icon-with-badge {
+  position: relative;
+  display: inline-block;
+}
+
+
+ion-badge {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 50%;
+}

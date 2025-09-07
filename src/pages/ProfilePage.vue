@@ -1,9 +1,6 @@
 <template>
   <ion-page>
     <ion-header class="ion-no-border ion-padding ion-text-center header" style="display: flex; align-items: center; justify-content: center;">
-      <ion-buttons slot="start" @click="handleBack">
-        <ion-icon :icon="arrowBackIcon" slot="end" />
-      </ion-buttons>
       <ion-title>Profile</ion-title>
     </ion-header>
 
@@ -16,8 +13,8 @@
               <img src="https://i.pravatar.cc/150?img=3" alt="Profile Picture" />
             </ion-avatar>
             <ion-label>
-              <h2>Benjamin Jack</h2>
-              <p>benjaminJack@gmail.com</p>
+              <h2>{{ user?.full_name }}</h2>
+              <p>{{ user?.email }}</p>
             </ion-label>
           </ion-item>
           <ion-item button lines="none" @click="handleEditProfile">
@@ -33,17 +30,17 @@
         <ion-label style="margin-left: 15px; font-weight: 600;">General</ion-label>
         <ion-item button @click="navigateToFavoriteCars" lines="none">
           <ion-icon :icon="heartOutlineIcon" slot="start" />
-          <ion-label>Favorite Cars</ion-label>
+          <ion-label>Favorites <span v-if="profile.favorites > 0" class="badge favorite">{{ profile.favorites }}</span></ion-label>
          <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
-        <ion-item button @click="navigateToPreviousRant" lines="none">
+        <!-- <ion-item button @click="navigateToPreviousRant" lines="none">
           <ion-icon :icon="listOutlineIcon" slot="start" />
           <ion-label>Previous Rant</ion-label>
           <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
-        </ion-item>
+        </ion-item> -->
         <ion-item button @click="navigateToPendingOrders" lines="none">
           <ion-icon :icon="cartOutlineIcon" slot="start" />
-          <ion-label>Pending Orders</ion-label>
+          <ion-label>Pending Orders  <span v-if="profile.pending_orders > 0" class="badge">{{ profile.pending_orders }}</span></ion-label>
           <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
       </ion-list>
@@ -55,12 +52,15 @@
         </ion-item>
       </ion-list>
     </ion-content>
+    <ion-loading :is-open="loading" message="Please wait..."></ion-loading>
+
   </ion-page>
 </template>
 
 <script>
+import { onIonViewWillEnter } from '@ionic/vue';
 import { arrowBack, heartOutline, listOutline, chevronForwardOutline, logOutOutline, pencilSharp, cartOutline } from 'ionicons/icons'
-import { IonPage, IonHeader, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonButtons, IonTitle, IonLoading } from '@ionic/vue';
+import { IonPage, IonHeader, IonContent, IonList, IonItem, IonLabel, IonAvatar, IonButtons, IonTitle, IonLoading, IonBadge } from '@ionic/vue';
 export default {
   components: {
     IonPage,
@@ -72,28 +72,55 @@ export default {
     IonAvatar,
     IonButtons,
     IonLoading,
+    IonBadge,
     IonTitle
   },
   data() {
     return {
-      loading: true,
+      loading: false,
       arrowBackIcon: arrowBack,
       heartOutlineIcon: heartOutline,
       cartOutlineIcon: cartOutline,
       listOutlineIcon: listOutline,
       logOutOutlineIcon: logOutOutline,
       pencilOutlineIcon: pencilSharp,
-      arrowForwardIcon: chevronForwardOutline
+      arrowForwardIcon: chevronForwardOutline,
+      profile : {
+        pending_orders: 0,
+        favorites: 0
+      }
+    }
+  },
+  ionViewWillEnter() {
+    this.handleGetProfileSettings();
+  },
+  computed: {
+    user() {
+      return this.$store.getters.getUser;
     }
   },
   methods: {
+    handleGetProfileSettings() {
+      this.axios.get('/user/profile-settings').then((res) => {
+        if(res.data.data) {
+          this.profile = {
+            pending_orders: res.data.pendingBookings,
+            favorites: res.data.favorites
+          }
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.loading = false;
+      });
+    },
     handleEditProfile() {
       // Navigate to profile edit page
       this.$router.push('/profile/edit');
     },
     navigateToFavoriteCars() {
       // Navigate to Favorite Cars page
-      this.$router.push('/favorite-cars');
+      this.$router.push('/favorites');
     },
     navigateToPendingOrders() {
       // Navigate to Pending Orders page
@@ -140,6 +167,23 @@ export default {
 </script>
 
 <style scoped>
+.badge {
+  background-color: orange;
+  color: #fff;
+  font-size: 12px;
+  min-width: 20px;   /* ensures enough space for numbers */
+  height: 20px;
+  line-height: 20px; /* vertically centers the text */
+  border-radius: 50%;
+  display: inline-block;
+  text-align: center;
+  padding: 0 5px; /* allows wider circle if 2+ digits */
+  box-sizing: border-box;
+  margin-top: -10px;
+}
+.favorite {
+  background-color: red;
+}
 .header {
   border-bottom: 1px solid #e0e0e0;
   background-color: #fff;

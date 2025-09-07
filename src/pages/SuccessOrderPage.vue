@@ -8,20 +8,34 @@
         <p>Your car rental has been successfully booked.</p>
       </div>
 
-      <!-- Booking Summary Card -->
-      
+      <!-- Payment Info (GCash only) -->
+      <ion-card v-if="order?.payment_type && order?.payment_type.toLowerCase() === 'gcash'" class="payment-info">
+        <ion-item lines="none">
+          <ion-label>
+            <h3>💳 Pay via GCash</h3>
+            <p>Please send your payment to:</p>
+          </ion-label>
+        </ion-item>
+        <div class="gcash-details">
+          <p><strong>GCash Number:</strong> {{ gcashDetails.number }}</p>
+          <p><strong>Account Name:</strong> {{ gcashDetails.name }}</p>
+          <p><strong>Total Amount:</strong> ₱{{ booking.totalPrice.toLocaleString() }}</p>
+          <p class="note">📌 Don’t forget to upload your proof of payment in your booking details.</p>
+        </div>
+      </ion-card>
       <!-- Action Buttons -->
       <ion-button expand="block" shape="round" color="success" class="action-btn" @click="goHome">
         Go to Home
       </ion-button>
-      <ion-button expand="block" shape="round" color="medium"  class="action-btn" @click="viewBooking">
-        View Booking History
+      <ion-button expand="block" shape="round" color="medium" class="action-btn" @click="viewBooking">
+        View Bookings
       </ion-button>
     </ion-content>
   </ion-page>
 </template>
 
 <script>
+import { onIonViewWillEnter } from '@ionic/vue';
 import { checkmarkCircleOutline } from 'ionicons/icons';
 import { IonPage, IonContent, IonCard, IonItem, IonLabel, IonButton, IonIcon } from '@ionic/vue';
 
@@ -36,22 +50,34 @@ export default {
         status: 'Confirmed',
         carModel: 'Toyota Vios',
         deliveryOption: 'Pickup',
-        paymentType: 'Cash on Delivery',
+        paymentType: 'gcash', // 👈 Example set to gcash
         pickupDate: '2025-09-05T09:00:00',
         returnDate: '2025-09-07T18:00:00',
         totalPrice: 4000,
-      }
+      },
+      gcashDetails: {
+        number: '0917-123-4567',
+        name: 'Juan Dela Cruz',
+      },
+      order : null,
     };
   },
+
+  ionViewWillEnter() {
+    const savedOrder = localStorage.getItem('lastOrder');
+    if (savedOrder) {
+      console.log('Retrieved order from localStorage:', savedOrder);
+      this.order = JSON.parse(savedOrder);
+      // Optionally remove it from storage if you only need it once
+      // localStorage.removeItem('lastOrder');
+    }
+  },
   methods: {
-    formatDate(dateStr) {
-      return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-    },
     goHome() {
-      this.$router.push('/');
+      location.href = '/';
     },
     viewBooking() {
-      this.$router.push('/booking-history');
+      this.$router.push('/pending-order');
     }
   }
 };
@@ -87,49 +113,31 @@ export default {
   font-size: 16px;
 }
 
-.booking-summary {
+/* Payment Info Card */
+.payment-info {
   width: 100%;
   max-width: 400px;
+  margin: 20px auto;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  padding: 10px;
+}
+
+.gcash-details {
   text-align: left;
-  border-radius: 15px;
-  padding: 20px;
-  margin-bottom: 30px;
-  background: linear-gradient(135deg, #e0f7f1, #f0fcf9);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  padding: 10px 16px 16px;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-.summary-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+.gcash-details strong {
+  color: #000;
 }
 
-.summary-top h3 {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.summary-top .status {
-  padding: 4px 10px;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.summary-top .status.confirmed {
-  background-color: #4CAF50;
-}
-
-.summary-top .status.cancelled {
-  background-color: #f44336;
-}
-
-.summary-body ion-item {
+.gcash-details .note {
+  color: #e67e22;
   font-size: 14px;
-  margin-bottom: 5px;
+  margin-top: 8px;
 }
 
 .action-btn {

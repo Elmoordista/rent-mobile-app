@@ -36,7 +36,7 @@
               class="book-button" 
               @click="handleLogin" 
               style="display: flex; align-items: center; height: 40px;">
-                Login
+                Update
             </ion-button>
       </form>
     </ion-content>

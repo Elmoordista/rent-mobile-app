@@ -7,7 +7,7 @@
       <ion-title>{{ slides[currentStep] }}</ion-title>
     </ion-header>
 
-    <ion-content class="ion-padding">
+    <div class="ion-padding" style="padding: 0 20px; padding-top: 20px; background-color: #f9f9f9;">
       <!-- Step Circles with Connecting Lines -->
       <div class="stepper-wrapper">
         <div class="stepper">
@@ -42,9 +42,9 @@
       </div>
 
       <!-- Step Content -->
-      <div class="step-content" style="height: 68vh; overflow-y: scroll;">
+      <div class="step-content" style="height: 68vh; overflow-y: scroll; margin-top: 20px;">
           <template v-if="currentStep === 0">
-            <BookingDetails />
+            <BookingDetails :setBookingDetails="setBookingDetails" :bookingDetails="booking_details"/>
           </template>
           <template v-if="currentStep === 1">
             <Confirmation />
@@ -54,10 +54,9 @@
             <Confirmation />
           </template> -->
       </div>
-    </ion-content>
+    </div>
 
     <!-- Fixed footer with Continue button -->
-     
     <ion-footer v-if="currentStep < slides.length - 1" class="ion-no-border">
       <ion-toolbar>
         <ion-button
@@ -87,6 +86,7 @@
         </ion-button>
       </ion-toolbar>
     </ion-footer>
+    <ion-loading :is-open="submitLoading" message="Placing order..."></ion-loading>
   </ion-page>
 </template>
 
@@ -95,13 +95,14 @@ import { arrowBack } from 'ionicons/icons';
 import BookingDetails from '@/component/BookingDetails.vue';
 import Confirmation from '@/component/Confirmation.vue';
 import PaymentMethods from '@/component/PaymentMethods.vue';
-import { IonPage, IonHeader, IonTitle, IonContent, IonButtons, IonIcon, IonButton } from '@ionic/vue';
+import { IonPage, IonHeader, IonTitle, IonContent, IonButtons, IonIcon, IonButton, IonLoading } from '@ionic/vue';
 export default {
     name: 'PageIndicator',
     components: {
       IonPage,
       BookingDetails,
       Confirmation,
+      IonLoading,
       PaymentMethods,
       IonHeader,
       IonTitle,
@@ -113,15 +114,39 @@ export default {
 
   data() {
     return {
-    arrowBackIcon: arrowBack,
-    slides: ['Booking Details', 'Confirmation'],
-    // slides: ['Booking Details', 'Payment Methods', 'Confirmation'],
-    currentStep: 0,
+      booking_details: null,
+      arrowBackIcon: arrowBack,
+      slides: ['Booking Details', 'Confirmation'],
+      // slides: ['Booking Details', 'Payment Methods', 'Confirmation'],
+      currentStep: 0,
+      submitLoading: false,
     };
+  },
+  computed: {
+    item_to_rent() {
+      return this.$store.state.item_to_rent;
+    },
+    bookingDetails() {
+      return this.$store.state.booking_details;
+    },
   },
   methods: {
     handleOrderPlace() {
-      this.$router.push('/success-order');
+      this.submitLoading = true;
+      this.axios.post(`/order`, { booking_details: this.bookingDetails, item_to_rent: this.item_to_rent }).then((res) => {
+          this.$store.commit('setBookingDetails', null);
+          this.$store.commit('removeAllItemToRent');
+          this.$store.dispatch('getCart');
+          const orderData = res.data.booking;
+          localStorage.setItem('lastOrder', JSON.stringify(orderData));
+          setTimeout(() => {
+            this.$router.push('/success-order');
+          }, 200);
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.submitLoading = false;
+      })
     },
     handleBack() {
       if (this.currentStep > 0) {
@@ -132,6 +157,35 @@ export default {
       }
     },
     nextStep() {
+      if(!this.booking_details?.address || !this.booking_details?.full_name || !this.booking_details?.email || !this.booking_details?.phone){
+        alert('Please fill in all required fields.');
+        return;
+      }
+      else if (!this.booking_details?.deliveryOption){
+        alert('Please provide a delivery address.');
+        return;
+      }
+      else if (!this.booking_details.paymentType){
+        alert('Please select a payment method.');
+        return;
+      }
+      else if (!this.booking_details.pickupDate || !this.booking_details.returnDate){
+        alert('Please select a pickup date.');
+        return;
+      }
+      else if (this.booking_details.pickupDate && this.booking_details.returnDate) {
+        const pickup = new Date(this.booking_details.pickupDate);
+        const returnD = new Date(this.booking_details.returnDate);
+
+        // Normalize to date only (ignore time zone/time of day)
+        const pickupDateOnly = new Date(pickup.getFullYear(), pickup.getMonth(), pickup.getDate());
+        const returnDateOnly = new Date(returnD.getFullYear(), returnD.getMonth(), returnD.getDate());
+
+        if (pickupDateOnly >= returnDateOnly) {
+          alert('Return date must be after pickup date.');
+          return;
+        }
+      }
       if (this.currentStep < this.slides.length - 1) {
         this.currentStep++;
       }
@@ -142,12 +196,17 @@ export default {
       }
     },
   },
+
+  watch: {
+    bookingDetails(newVal) {
+      this.booking_details = newVal;
+    }
+  },
 };
 </script>
 <style scoped>
 .header {
   border-bottom: 1px solid #e0e0e0;
-  background-color: #fff;
 }
 
 /* Keep existing stepper styles */
@@ -156,10 +215,7 @@ export default {
   /* Remove this because button is now fixed in footer */
   display: none;
 }
-.header {
-  border-bottom: 1px solid #e0e0e0;
-  background-color: #f9f9f9;
-}
+
 .stepper-wrapper {
   max-width: 400px; /* limit width */
   margin-left: auto;

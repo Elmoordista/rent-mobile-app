@@ -5,6 +5,10 @@
         <ion-icon :icon="arrowBackIcon" slot="end" />
       </ion-buttons>
       <ion-title>Item Details</ion-title>
+      <div class="icon-with-badge" @click="handleOpenCart">
+        <ion-icon :icon="cartIcon" size="large" />
+        <ion-badge color="danger" v-if="cartCount.length > 0">{{ cartCount.length }}</ion-badge>
+      </div>
     </ion-header>
 
     <ion-content :fullscreen="true">
@@ -45,9 +49,12 @@
 
               <div class="item-details">
                 <div class="item-info">
-                  <span class="item-name">{{ items.name }}</span>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span class="item-name">{{ items.name }}</span>
+                    <ion-icon style="color: red; font-size:25px;"  :icon="items.is_favorite ? heartIcon : heartOutlineIcon" @click="toggleFavorite" />
+                  </div>
                   <span class="item-description">
-                    The Toyota Wigo offers reliability and efficiency — perfect for city driving and road trips.
+                    {{items.description || 'No description available.'}}
                   </span>
 
                   <div class="item-meta" style="margin-top: 10px;">
@@ -60,36 +67,50 @@
                   </div>
                 </div>
               </div>
+              <div class="quantity-wrapper">
+                <ion-button fill="outline"  color="dark" size="small" @click="decreaseQuantity">
+                  <span>-</span>
+                </ion-button>
+                <span class="quantity">{{ quantity }}</span>
+                <ion-button fill="outline" color="dark" size="small" @click="increaseQuantity">
+                  <span>+</span>
+                </ion-button>
+              </div>
               <div class="item-details review-wrapper" style="margin-top: 10px;">
                 <div class="item-info">
                  <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #000; font-weight: bold;">Reviews (155)</span>
+                  <span style="color: #000; font-weight: bold;">Reviews ({{items.reviews_count||0}})</span>
                   <span style="color: #007bff; font-weight: bold;" @click="handleShowReviews">See all</span>
                  </div>
                  <div class="carousel-wrapper">
                    <Carousel
+                    
                      :items-to-show="1"
-                     :wrap-around="true"
+                     :loop="false"
                      :snap-align="'start'"
                      class="myCarousel"
+                     v-if="items.reviews && items.reviews.length > 0"
                     >
-                      <Slide v-for="(review, index) in reviews" :key="index">
+                      <Slide v-for="(review, index) in items.reviews" :key="index">
                         <div class="review-item">
                           <div style="display: flex; justify-content: space-between;">
                             <!-- avatar -->
                              <div style="display: flex; align-items: center; gap: 5px;">
                                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZ6th-oTbkDMbDOPGU_kkRMM55lfvRYgM8JA&s" alt="Avatar" class="avatar" height="20" style="border-radius: 50px;" />
-                                <span style="color: #000;">{{ review.author }}</span>
+                                <span style="color: #000;">{{ review.user.full_name }}</span>
                              </div>
                             <div class="item-rating">
                               <ion-icon :icon="starIcon" class="star-icon" />
-                              <span class="rating-value" style="color: #000;">5.0</span>
+                              <span class="rating-value" style="color: #000;">{{review.rating}}.0</span>
                             </div>
                           </div>
                           <p>{{ review.comment }}</p>
                         </div>
                       </Slide>
                     </Carousel>
+                    <div v-if="!items.reviews || items.reviews.length === 0" style="text-align: center; color: #666; margin-top: 10px; padding: 10px; border: 1px solid #eee; border-radius: 10px;">
+                      No reviews available.
+                    </div>
                   </div>
                 </div>
               </div>
@@ -99,22 +120,63 @@
       </ion-grid>
     </ion-content>
 
-    <ion-footer class="ion-no-border" style="display: flex; gap: 5px; justify-content: space-around;">
-        <ion-button color="dark" shape="round" expand="block" class="book-button" @click="handleClickItem(items)" style="display: flex; align-items: center;">
-          <ion-icon :icon="cartIcon" slot="start" />
-          Add to cart
-        </ion-button>
-        <ion-button color="dark" shape="round" expand="block" class="book-button" @click="handleClickItem(items)">
-          Book Now
-          <ion-icon :icon="arrowIcon" slot="end" />
-        </ion-button>
-    </ion-footer>
+    <ion-toast
+      :is-open="showToast"
+      :message="message"
+      duration="2000"
+      color="success"
+      position="top"
+      style="color: #fff;"
+      @didDismiss="showToast = false"
+    />  
+
+    <ion-footer class="ion-no-border" 
+  style="display: flex; gap: 5px; justify-content: space-around;"
+>
+  <!-- Add to Cart -->
+  <ion-button 
+    color="dark" 
+    shape="round" 
+    expand="block" 
+    class="book-button" 
+    :disabled="submitLoading" 
+    @click="handleAddToCart(items)"
+  >
+    <template v-if="submitLoading">
+      <ion-spinner name="crescent" slot="start"></ion-spinner>
+       loading...
+    </template>
+    <template v-else>
+      <ion-icon :icon="cartIcon" slot="start" />
+      Add to cart
+    </template>
+  </ion-button>
+
+  <!-- Book Now -->
+  <ion-button 
+    color="dark" 
+    shape="round" 
+    expand="block" 
+    class="book-button" 
+    :disabled="submitLoading" 
+    @click="handleClickItem(items)"
+  >
+    <template v-if="submitLoading">
+      <ion-spinner name="crescent" slot="start"></ion-spinner>
+      loading...
+    </template>
+    <template v-else>
+      Book Now
+      <ion-icon :icon="arrowIcon" slot="end" />
+    </template>
+  </ion-button>
+</ion-footer>
   </ion-page>
 </template>
 
 <script>
-import { star, arrowForward, arrowBack, cart } from 'ionicons/icons'
-import { IonPage, IonLoading, IonHeader, IonTitle, IonContent, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton } from '@ionic/vue'
+import { star, arrowForward, arrowBack, cart, heart, heartOutline } from 'ionicons/icons'
+import { IonPage, IonFooter, IonSpinner, IonToast, IonLoading, IonHeader, IonTitle, IonContent, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton } from '@ionic/vue'
 import 'vue3-carousel/carousel.css'
 
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
@@ -124,6 +186,8 @@ export default {
   components: {
     IonPage,
     IonLoading,
+    IonSpinner,
+    IonToast,
     IonHeader,
     IonTitle,
     IonContent,
@@ -133,6 +197,7 @@ export default {
     IonCard,
     IonIcon,
     IonButton,
+    IonFooter,
     Carousel,
     Pagination,
     Navigation,
@@ -142,8 +207,14 @@ export default {
     return {
       loading_item: false,
       starIcon: star,
+      heartOutlineIcon: heartOutline,
+      heartIcon: heart,
+      quantity: 1,
+      submitLoading: false,
       arrowIcon: arrowForward,
       arrowBackIcon: arrowBack,
+      showToast: false,
+      message: 'Added to cart, Successfully!',
       cartIcon: cart,
       reviews: [
           { comment: 'Great car for city driving!', author: 'John Doe', rating: 5 },
@@ -161,12 +232,51 @@ export default {
       }
     }
   },
+  computed: {
+    // Access the cart from Vuex store
+    cartCount() {
+      return this.$store.getters.getCart;
+    }
+  },
   mounted(){
     this.handleGetItem();
   },
   methods: {
+    handleOpenCart() {
+      this.$router.push('/cart');
+    },
+    increaseQuantity() {
+      this.quantity++
+    },
+    decreaseQuantity() {
+      if (this.quantity > 1) this.quantity--
+    },
     handleShowReviews() {
       this.$router.push(`/reviews/${this.$route.params.id}`);
+    },
+    toggleFavorite() {
+      // Toggle the favorite status
+      this.items.is_favorite = !this.items.is_favorite;
+      this.axios.post(`/item/add-to-favorite`, { ...this.items }).then(() => {
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.submitLoading = false;
+      })
+    },
+    handleAddToCart(items) {
+      this.submitLoading = true;
+      this.axios.post(`/cart`, { ...items, quantity:this.quantity }).then((res) => {
+        if(res.data.success) {
+          this.showToast = true;
+          this.message = 'Added to cart, Successfully!';
+          this.$store.dispatch('getCart'); // Refresh cart in Vuex store
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.submitLoading = false;
+      })
     },
     handleGetItem() {
       this.loading_item = true;
@@ -187,6 +297,18 @@ export default {
     },
     handleClickItem(item) {
       this.$router.push('/page-indicator')
+      const item_to_rent = {
+        item_id: item.id,
+        name: item.name,
+        pricePerDay: item.price_per_day,
+        qty: this.quantity,
+        image: item.images[0]?.image_url || '',
+      }
+      // Store selected items in Vuex store
+      this.$store.commit('setItemToRent', item_to_rent);
+      setTimeout(() => {
+        this.$router.push('/page-indicator');
+      }, 200);
     }
   }
 }
@@ -290,6 +412,17 @@ export default {
   border-radius: 10px;
   width: 100%;
   height: 100%;
+}
+.quantity-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.quantity-wrapper span{
+  font-size: 16px;
+  font-weight: bold;
+  color: #000;
 }
 </style>
 <style>

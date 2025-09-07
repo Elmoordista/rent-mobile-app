@@ -103,10 +103,10 @@ export default {
             email: this.email,
             password: this.password
         }).then((res)=>{
-
             localStorage.setItem('token', res.data.token);
             this.$store.commit('setAuthToken', res.data.token);
             this.$store.commit('setUser', res.data.user);
+            this.$store.dispatch('getCart');
             this.$router.push('/cars');
         }).catch((error)=>{
             this.showAlert = true;
@@ -117,8 +117,7 @@ export default {
 
     // Handle Sign Up
     handleSignUp() {
-      // Add your sign-up logic here
-      console.log("Redirecting to sign up...");
+      this.$router.push('/sign-up');
     },
 
     // Handle Forgot Password
