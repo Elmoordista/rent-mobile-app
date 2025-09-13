@@ -138,7 +138,9 @@ export default {
           this.$store.commit('removeAllItemToRent');
           this.$store.dispatch('getCart');
           const orderData = res.data.booking;
+          const gcash_info = res.data.gcash_info;
           localStorage.setItem('lastOrder', JSON.stringify(orderData));
+          localStorage.setItem('gcash_info', JSON.stringify(gcash_info));
           setTimeout(() => {
             this.$router.push('/success-order');
           }, 200);
@@ -157,6 +159,10 @@ export default {
       }
     },
     nextStep() {
+      if(this.item_to_rent.length && this.item_to_rent[0].need_driver_license && !this.booking_details?.selectedFileBase64 && !this.booking_details?.book_with_driver){
+        alert('Please upload a copy of your driver license.');
+        return;
+      }
       if(!this.booking_details?.address || !this.booking_details?.full_name || !this.booking_details?.email || !this.booking_details?.phone){
         alert('Please fill in all required fields.');
         return;
@@ -200,7 +206,7 @@ export default {
   watch: {
     bookingDetails(newVal) {
       this.booking_details = newVal;
-    }
+    },
   },
 };
 </script>

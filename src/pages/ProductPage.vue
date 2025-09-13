@@ -37,7 +37,7 @@
                   class="mySwiper" 
                   style="height: 220px;"
                 >
-                  <Slide v-for="(img, index) in items.images" :key="index">
+                  <Slide v-for="(img, index) in handleGetImages()" :key="index">
                     <img :src="img.image_url" alt="Car Image" class="img" />
                   </Slide>
                   <template #addons v-if="items.images.length > 1">
@@ -65,6 +65,52 @@
 
                     <span class="item-price">₱{{ items.price_per_day }}/day</span>
                   </div>
+                  <ion-item-divider></ion-item-divider>
+                  <div class="item-meta" style="margin-top: 5px;">
+                    <span class="item-price">Available : {{ available}}</span>
+                  </div>
+                  <div  v-if="items.has_sizes_color_options" class="item-variations">
+                      <!-- Size Select -->
+                      <div class="option-group">
+                        <span class="option-label" style="color: #000; white-space: nowrap;">Size : </span>
+                        <ion-select
+                          interface="popover"
+                          placeholder="Select Size"
+                          class="custom-select"
+                          @ionChange="handleCheckAvailability"
+                          v-model="selectedSize"
+                        >
+                          <ion-select-option
+                            v-for="(variation, index) in items.variations"
+                            :key="'size-' + index"
+                            :value="variation.size"
+                          >
+                            {{ variation.size }}
+                          </ion-select-option>
+                        </ion-select>
+                      </div>
+
+                      <!-- Color Select -->
+                      <div class="option-group">
+                        <span class="option-label" style="color: #000; white-space: nowrap;">Color : </span>
+                        <ion-select
+                          interface="popover"
+                          placeholder="Select Color"
+                          class="custom-select"
+                          @ionChange="handleCheckAvailability"
+                          v-model="selectedColor"
+                        >
+                          <ion-select-option
+                            v-for="(variation, index) in items.variations"
+                            :key="'color-' + index"
+                            :value="variation.color"
+                          >
+                            <span class="color-box" :style="{ backgroundColor: variation.color }"></span>
+                            {{ variation.color }}
+                          </ion-select-option>
+                        </ion-select>
+                      </div>
+                    </div>
                 </div>
               </div>
               <div class="quantity-wrapper">
@@ -131,52 +177,52 @@
     />  
 
     <ion-footer class="ion-no-border" 
-  style="display: flex; gap: 5px; justify-content: space-around;"
->
-  <!-- Add to Cart -->
-  <ion-button 
-    color="dark" 
-    shape="round" 
-    expand="block" 
-    class="book-button" 
-    :disabled="submitLoading" 
-    @click="handleAddToCart(items)"
-  >
-    <template v-if="submitLoading">
-      <ion-spinner name="crescent" slot="start"></ion-spinner>
-       loading...
-    </template>
-    <template v-else>
-      <ion-icon :icon="cartIcon" slot="start" />
-      Add to cart
-    </template>
-  </ion-button>
+      style="display: flex; gap: 5px; justify-content: space-around; padding: 0 5px;"
+    >
+      <!-- Add to Cart -->
+      <ion-button v-if="!items.need_driver_license"
+        color="dark" 
+        shape="round" 
+        expand="block" 
+        class="book-button" 
+        :disabled="submitLoading || available === 0" 
+        @click="handleAddToCart(items)"
+      >
+        <template v-if="submitLoading">
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          loading...
+        </template>
+        <template v-else>
+          <ion-icon :icon="cartIcon" slot="start" />
+          Add to cart
+        </template>
+      </ion-button>
 
-  <!-- Book Now -->
-  <ion-button 
-    color="dark" 
-    shape="round" 
-    expand="block" 
-    class="book-button" 
-    :disabled="submitLoading" 
-    @click="handleClickItem(items)"
-  >
-    <template v-if="submitLoading">
-      <ion-spinner name="crescent" slot="start"></ion-spinner>
-      loading...
-    </template>
-    <template v-else>
-      Book Now
-      <ion-icon :icon="arrowIcon" slot="end" />
-    </template>
-  </ion-button>
-</ion-footer>
+      <!-- Book Now -->
+      <ion-button 
+        color="dark" 
+        shape="round" 
+        expand="block" 
+        class="book-button" 
+        :disabled="submitLoading || available === 0" 
+        @click="handleClickItem(items)"
+      >
+        <template v-if="submitLoading">
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          loading...
+        </template>
+        <template v-else>
+          Book Now
+          <ion-icon :icon="arrowIcon" slot="end" />
+        </template>
+      </ion-button>
+    </ion-footer>
   </ion-page>
 </template>
 
 <script>
 import { star, arrowForward, arrowBack, cart, heart, heartOutline } from 'ionicons/icons'
-import { IonPage, IonFooter, IonSpinner, IonToast, IonLoading, IonHeader, IonTitle, IonContent, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton } from '@ionic/vue'
+import { IonPage, IonFooter, IonSpinner, IonToast, IonLoading, IonHeader, IonTitle, IonSelect, IonContent, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton } from '@ionic/vue'
 import 'vue3-carousel/carousel.css'
 
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
@@ -188,6 +234,7 @@ export default {
     IonLoading,
     IonSpinner,
     IonToast,
+    IonSelect,
     IonHeader,
     IonTitle,
     IonContent,
@@ -210,6 +257,9 @@ export default {
       heartOutlineIcon: heartOutline,
       heartIcon: heart,
       quantity: 1,
+      selectedSize: null,
+      selectedColor: null,
+      available: 0,
       submitLoading: false,
       arrowIcon: arrowForward,
       arrowBackIcon: arrowBack,
@@ -242,6 +292,35 @@ export default {
     this.handleGetItem();
   },
   methods: {
+    handleCheckAvailability() {
+      if (this.selectedSize && this.selectedColor) {
+        const variation = this.items.variations.find(v =>
+          v.size.toLowerCase() === this.selectedSize.toLowerCase() &&
+          v.color.toLowerCase() === this.selectedColor.toLowerCase()
+        );
+        if (variation) {
+          this.available = variation.quantity;
+        } else {
+          this.available = 0; // No matching variation found
+        }
+      } else {
+        this.available = this.items.available_quantity; // Default available quantity
+      }
+    },
+    handleGetImages() {
+
+      if (this.items && this.items.images && this.items.images.length > 0 && !this.items.has_sizes_color_options) {
+        return this.items.images;
+      } else {
+        if(this.items.variations){
+            return this.items.variations.map((item)=>{
+              return {
+                image_url: item.image_url || 'https://via.placeholder.com/150'
+              }
+            })
+        }
+      }
+    },
     handleOpenCart() {
       this.$router.push('/cart');
     },
@@ -265,8 +344,23 @@ export default {
       })
     },
     handleAddToCart(items) {
+      if(this.available < this.quantity){
+        alert('Selected quantity exceeds available stock.');
+        return;
+      }
       this.submitLoading = true;
-      this.axios.post(`/cart`, { ...items, quantity:this.quantity }).then((res) => {
+      var variation_id = null;
+
+      if(this.items.has_sizes_color_options && this.selectedSize && this.selectedColor){
+        const item_variation_selected = this.items.variations.find(v =>
+          v.size.toLowerCase() === this.selectedSize.toLowerCase() &&
+          v.color.toLowerCase() === this.selectedColor.toLowerCase()
+        );
+        if(item_variation_selected){
+          variation_id = item_variation_selected.id;
+        }
+      }
+      this.axios.post(`/cart`, { ...items, quantity:this.quantity, variation_id : variation_id }).then((res) => {
         if(res.data.success) {
           this.showToast = true;
           this.message = 'Added to cart, Successfully!';
@@ -296,25 +390,63 @@ export default {
       this.$router.push('/cars');
     },
     handleClickItem(item) {
-      this.$router.push('/page-indicator')
+      if(this.available < this.quantity){
+        alert('Selected quantity exceeds available stock.');
+        return;
+      }
+      // this.$router.push('/page-indicator')
+      var variation_id = null;
+      if(item.has_sizes_color_options && this.selectedSize && this.selectedColor){
+        variation_id = item.variations.find(v =>
+          v.size.toLowerCase() === this.selectedSize.toLowerCase() &&
+          v.color.toLowerCase() === this.selectedColor.toLowerCase()
+        )?.id;
+      }
       const item_to_rent = {
         item_id: item.id,
         name: item.name,
         pricePerDay: item.price_per_day,
         qty: this.quantity,
+        need_driver_license: item.need_driver_license,
         image: item.images[0]?.image_url || '',
+        variation: variation_id,
+        variation_id: item.variation_id,
       }
-      // Store selected items in Vuex store
+      // // Store selected items in Vuex store
       this.$store.commit('setItemToRent', item_to_rent);
       setTimeout(() => {
         this.$router.push('/page-indicator');
       }, 200);
+    }
+  },
+  watch: {
+    // Watch for changes in cart and update the cart count
+    items(newVal) {
+      //selected default size and color and available quantity
+      if(newVal.variations && newVal.variations.length > 0){
+        this.selectedSize = newVal.variations[0].size;
+        this.selectedColor = newVal.variations[0].color;
+        this.available = newVal.variations[0].quantity;
+      }
+      else{
+        this.available = newVal.available_quantity;
+      }
     }
   }
 }
 </script>
 
 <style scoped>
+.item-variations{
+  display: flex;
+  justify-content: space-between;
+}
+.option-group{
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  width: 50%;
+}
 .header {
   border-bottom: 1px solid #e0e0e0;
   background-color: #fff;
@@ -393,6 +525,7 @@ export default {
 }
 
 .book-button {
+  width: 100%;
   margin-top: 8px;
 }
 

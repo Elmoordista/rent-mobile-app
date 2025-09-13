@@ -15,6 +15,7 @@ import PendingOrderPage from '../pages/PendingOrderPage.vue';
 import AddReviewPage from '../pages/AddReviewPage.vue';
 import SignUpPage from '../pages/SignUpPage.vue';
 import FavoritePage from '../pages/FavoritePage.vue';
+import ForgotPassword from '../pages/ForgotPasswordPage.vue';
 
 const routes = [
   {
@@ -51,7 +52,12 @@ const routes = [
     name: 'SignUpPage',
     component: SignUpPage
   },
-   {
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword
+  },
+  {
     path: '/reviews/:id',
     name: 'ReviewsPage',
     component: ReviewsPage

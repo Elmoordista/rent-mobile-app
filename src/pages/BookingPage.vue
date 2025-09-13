@@ -19,7 +19,7 @@
             <img :src="booking.image" :alt="booking.carModel" class="car-thumb" />
           </ion-thumbnail>
           <ion-label>
-            <!-- <h3>{{ booking.carModel }}</h3> -->
+            <h3>{{ booking.name }}</h3>
             <p>Pickup: {{ formatDate(booking.pickupDate) }}</p>
             <p>Return: {{ formatDate(booking.returnDate) }}</p>
             <p>Payment: <strong>{{ booking.paymentType }}</strong></p>
@@ -78,7 +78,9 @@ export default {
               return { 
                 id: item.item.id,
                 carModel: 'null',
-                image: item.item.images[0].image_url || '',
+                name: item.item.name,
+                has_variation: item.variation_id ? true : false,
+                image: item.variation ? item.variation.image_url : item.item.images[0].image_url,
                 pickupDate: item.booking.start_date,
                 returnDate: item.booking.end_date,
                 paymentType: item.booking.payment_type,

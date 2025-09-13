@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const HttpClient = axios.create({
-  baseURL: 'https://rentapp-api.onrender.com/api' || 'http://localhost:8000/api',
+  baseURL: 'http://localhost:8000/api',
+  // baseURL: 'https://rentapp-api.onrender.com/api' || 'http://localhost:8000/api',
   timeout: 60000,
   headers: {
     "Content-Type": "application/json",
@@ -24,11 +25,13 @@ const responseErrorInterceptor = (error) => {
   if ((error.response && error.response.status == 401)) {
     // if ((error.response && error.response.status == 401) || error.code == "ERR_NETWORK" || error.code == "ERR_BAD_RESPONSE") {
       localStorage.removeItem('token');
-      // window.location.href = '/login';
+      window.location.href = '/login';
   }
   if ((error.response && error.response.data.message)) {
      console.log(error.response.data.message)
   }
+
+  return Promise.reject(error);
 };
 
 // function showError(msg) {

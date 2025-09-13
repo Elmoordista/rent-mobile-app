@@ -24,17 +24,22 @@
 
           <ion-thumbnail slot="start">
             <img :src="item.image || placeholder" :alt="item.name" class="cart-thumb" />
+            <!-- <img :src="handleGetImages(item) || placeholder" :alt="item.name" class="cart-thumb" /> -->
           </ion-thumbnail>
 
           <ion-label>
             <h3>{{ item.name }}</h3>
             <p>₱{{ formatCurrency(item.pricePerDay) }} / day</p>
-
+            <template v-if="item.variation_id">
+              <p>Size : <b class="badge">{{ item.variation?.size }}</b></p>
+              <p>Color : <b class="badge">{{ item.variation?.color }}</b></p>
+            </template>
+            <p>Available : {{ item.variation_id ? item.variation?.available_quantity  : item.available_quantity }}</p>
             <!-- Quantity controls -->
             <div class="flex items-center mt-2" style="display: flex; align-items: center; gap: 8px;">
               <ion-button size="small" color="dark" @click="decreaseQty(item)" :disabled="item.qty <= 1">-</ion-button>
               <span class="mx-2">{{ item.qty }}</span>
-              <ion-button size="small" color="dark" @click="increaseQty(item)">+</ion-button>
+              <ion-button size="small" color="dark" @click="increaseQty(item)" :disabled="item.qty >= (item.variation_id ? item.variation?.available_quantity : item.available_quantity)">+</ion-button>
             </div>
 
             <p class="mt-1">Subtotal: ₱{{ formatCurrency(itemSubtotal(item)) }}</p>
@@ -60,6 +65,12 @@
     <ion-loading
       :is-open="submitLoading"
       message="Processing..."
+      spinner="crescent"
+    ></ion-loading>
+
+     <ion-loading
+      :is-open="loading_item"
+      message="Loading..."
       spinner="crescent"
     ></ion-loading>
 
@@ -129,10 +140,11 @@ export default {
   },
   data() {
     return {
-      placeholder: 'https://via.placeholder.com/128x128.png?text=Item',
+      placeholder: '',
       arrowBackIcon: arrowBackOutline,
       showToast: false,
       submitLoading: false,
+      loading_item: false,
       message: '',
       items: [
         { id: 1, name: 'Mirrorless Camera', pricePerDay: 800, qty: 1, image: 'https://www.pngplay.com/wp-content/uploads/13/Toyota-Land-Cruiser-Prado-No-Background.png', selected: true },
@@ -157,11 +169,19 @@ export default {
         return {
           id: item.id,
           item_id: item.item.id,
+          variation_id: item.variation_id,
+          variation: item.variation,
           name: item.item.name,
+          available_quantity: item.item.available_quantity,
+          need_driver_license: item.item.need_driver_license,
           pricePerDay: item.item.price_per_day,
           qty: item.quantity,
-          image: item.item.images.length ? item.item.images[0].image_url :'',
+          image: this.handleGetImages(item.item, item.variation_id),
+          // image: item.item.has_sizes_color_options ? item.item.variation[0]?.image_url : item.item.images[0]?.image_url,
+          // image: item.item.images.length ? item.item.images[0].image_url :'',
+          // variations: item.item.variations.length ? item.item.variations[0].image_url : '',
           selected: false, // Default to not selected
+          updateTimeouts: {}
         }
       });  // Access cart from Vuex store
     },
@@ -179,9 +199,44 @@ export default {
         }
       });
     }
+    this.getCart();
   },
   
   methods: {
+    getCart() {
+      this.loading_item = true;
+      this.axios.get('/cart').then((res) => {
+        if(res.data.success) {
+          this.$store.commit('setCart', res.data.data); // Update Vuex store with fetched cart data
+          this.items = this.cartItems; // Update local items with the latest cart data
+          if(this.item_to_rent && this.item_to_rent.length){
+            // If there are items to rent, mark them as selected in the cart
+            this.items.forEach(cartItem => {
+              if (this.item_to_rent.some(rentItem => rentItem.id === cartItem.id)) {
+                cartItem.selected = true;
+              }
+            });
+          }
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+        this.loading_item = false;
+      })
+    },
+    handleGetImages(items, variation_id = null) {
+      if (items && items.images && items.images.length > 0 && !items.has_sizes_color_options && !variation_id) {
+        return items.images[0]?.image_url;
+      } else {
+        if(items.variations){
+          if(variation_id){
+            const variation = items.variations.find(v => v.id === variation_id);
+            return variation ? variation.image_url : 'https://via.placeholder.com/150';
+          }
+          return items.variations[0]?.image_url;
+        }
+      }
+    },
     handleBack() {
       this.$router.back()
     },
@@ -216,16 +271,40 @@ export default {
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return new Date(date).toLocaleDateString(undefined, options);
     },
-    increaseQty(item) {
-      item.qty++
-      this.handleUpdateCartQty(item.id, item.qty);
-    },
-    decreaseQty(item) {
-      if (item.qty > 1) {
-        item.qty--
-        this.handleUpdateCartQty(item.id, item.qty);
-      }
-    },
+    // increaseQty(item) {
+    //   item.qty++
+    //   this.handleUpdateCartQty(item.id, item.qty);
+    // },
+    // decreaseQty(item) {
+    //   if (item.qty > 1) {
+    //     item.qty--
+    //     this.handleUpdateCartQty(item.id, item.qty);
+    //   }
+    // },
+     increaseQty(item) {
+        item.qty++;
+        this.queueUpdate(item.id, item.qty);
+      },
+      decreaseQty(item) {
+        if (item.qty > 1) {
+          item.qty--;
+          this.queueUpdate(item.id, item.qty);
+        }
+      },
+      queueUpdate(itemId, qty) {
+        if (!this.updateTimeouts) {
+          this.updateTimeouts = {};
+        }
+
+        if (this.updateTimeouts[itemId]) {
+          clearTimeout(this.updateTimeouts[itemId]);
+        }
+
+        this.updateTimeouts[itemId] = setTimeout(() => {
+          this.handleUpdateCartQty(itemId, qty);
+          delete this.updateTimeouts[itemId];
+        }, 300);
+      },
     // if uncheck remove always from item_to_rent
     // if check add to item_to_rent
     handleCheckboxChange(item) {
@@ -243,6 +322,8 @@ export default {
         pricePerDay: item.pricePerDay,
         qty: item.qty,
         image: item.image,
+        variation_id: item.variation_id,
+        need_driver_license: item.need_driver_license,
       }));
       // Store selected items in Vuex store
       itemsToRent.forEach(item => {

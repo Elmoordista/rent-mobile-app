@@ -1,6 +1,6 @@
 <template>
   <ion-page class="ion-page-wrapper booking-details-wrapper">
-    <ion-card class="booking-details"  style="margin-top: 0 !important;">
+    <ion-card v-if="item_to_rent && item_to_rent[0].need_driver_license" class="booking-details"  style="margin-top: 0 !important;">
       <div class="book-driver" >
         <span>Book With Driver</span>
         <span>Don't have a driver, book a driver.</span>
@@ -44,6 +44,9 @@
           <ion-radio slot="start" value="gcash"></ion-radio>
         </ion-item>
       </ion-radio-group>
+      <div v-if="booking_details.paymentType === 'cod'" style="font-size: 12px; color: #666; margin-left: -5px; margin-top: 10px; color: red;">
+        <span>Note: Cash on Delivery may include an extra service fee.</span>
+      </div>
     </ion-card>
     <!-- Customer Info -->
     <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
@@ -63,12 +66,30 @@
     
     <!-- Requirements -->
 
-    <!-- <div class="div-wrapper">
-      <span>Driver Licence :</span>
-      <div>
-        <ion-input id="driver-license"  placeholder="Enter your requirements" type="file"></ion-input>
+    <div v-if="item_to_rent && item_to_rent[0].need_driver_license && !booking_details.book_with_driver" class="div-wrapper">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Driver Licence :</span>
+        <ion-button v-if="booking_details.selectedFileBase64" size="small" color="dark" @click="$refs.fileInput.click()" style="margin-bottom: 10px;">
+          Upload File Again
+        </ion-button>
       </div>
-    </div> -->
+      <!-- <div>
+        <ion-input id="driver-license"  placeholder="Enter your requirements" type="file"></ion-input>
+      </div> -->
+      <div style="text-align: center;">
+          <input
+            type="file"
+            ref="fileInput"
+            accept="image/*"
+            @change="handleFileSelect"
+            :style="`margin-bottom: 20px; display: ${!booking_details.selectedFileBase64 ? 'block' : 'none'};`"
+          />
+
+          <div v-if="booking_details.selectedFileBase64" class="license-preview">
+            <img :src="booking_details.selectedFileBase64" class="img-preview" alt="Preview" style="max-width: 50%; border-radius: 8px;" />
+          </div>
+        </div>
+    </div>
 
     <!-- Rental Date & Time -->
     <div class="rental-datetime">
@@ -120,6 +141,7 @@
           <p>{{ validationError }}</p>
         </ion-text>
 
+
         <div style="display: flex; justify-content: flex-end; padding: 10px;">
           <ion-button fill="clear" @click="showPicker = false">Cancel</ion-button>
           <ion-button @click="confirmDate">OK</ion-button>
@@ -163,12 +185,14 @@ export default {
       showPicker: false,
       activeField: null,
       validationError: '',
+      item_to_rent: null,
       booking_details: {
           book_with_driver: false,
           deliveryOption: 'pickup',
           paymentType: 'cod',
           pickupDate: new Date().toISOString(),
           returnDate: new Date(Date.now() + 86400000).toISOString(), // now + 1 day
+          selectedFileBase64: null,
           email: '',
           phone: '',
           address: '',
@@ -186,18 +210,36 @@ export default {
     bookingDetails() {
       return this.$store.state.booking_details;
     },
+    rent_item() {
+      return this.$store.state.item_to_rent;
+    },
   },
   mounted() {
     // console.log(this.bookingDetails,'xxxx')
     if(this.bookingDetails){
       this.booking_details = { ...this.bookingDetails};
     }
+    if(this.rent_item){
+      this.item_to_rent = this.rent_item;
+    }
+    this.getLatestOrderInfo();
     // const existingDetails = this.$store.state.booking_details;
     // if (existingDetails && Object.keys(existingDetails).length) {
     //   this.booking_details = { ...this.booking_details, ...existingDetails };
     // }
   },
   methods: {
+    handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Convert to base64
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          this.bookingDetails.selectedFileBase64 = event.target.result; // <-- base64 string
+        };
+        reader.readAsDataURL(file);
+      }
+    },
     isNumber(e){
         const keysAllowed = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', 'Backspace'];
         const keyPressed = e.key;
@@ -205,6 +247,21 @@ export default {
         if (!keysAllowed.includes(keyPressed)) {
             e.preventDefault()
         }
+    },
+
+    getLatestOrderInfo() {
+      this.axios.get(`/user/latest-order`).then((res) => {
+        if(res.data.success && res.data.data){
+          const booking = JSON.parse(res.data.data.notes);
+          this.booking_details.full_name = booking.full_name || '';
+          this.booking_details.email = booking.email || '';
+          this.booking_details.phone = booking.phone || '';
+          this.booking_details.address = booking.address || '';
+        }
+      }).catch((error) => {
+        console.log(error, 'error')
+      }).finally(() => {
+      })
     },
     emitBooking() {
       this.$emit('setBookingDetails', { ...this.booking_details });
@@ -361,7 +418,13 @@ ion-input {
 </style>
 
 <style>
-
+.license-preview{
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+    margin: 0 10px;
+    padding: 10px 0;
+}
 
 .booking-details {
   background-color: #fff !important;

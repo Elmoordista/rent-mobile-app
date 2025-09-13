@@ -17,8 +17,8 @@
           </ion-label>
         </ion-item>
         <div class="gcash-details">
-          <p><strong>GCash Number:</strong> {{ gcashDetails.number }}</p>
-          <p><strong>Account Name:</strong> {{ gcashDetails.name }}</p>
+          <p><strong>GCash Number:</strong> {{ gcashDetails.account_number }}</p>
+          <p><strong>Account Name:</strong> {{ gcashDetails.account_name }}</p>
           <p><strong>Total Amount:</strong> ₱{{ booking.totalPrice.toLocaleString() }}</p>
           <p class="note">📌 Don’t forget to upload your proof of payment in your booking details.</p>
         </div>
@@ -56,8 +56,8 @@ export default {
         totalPrice: 4000,
       },
       gcashDetails: {
-        number: '0917-123-4567',
-        name: 'Juan Dela Cruz',
+        account_number: '0917-123-4567',
+        account_name: 'Juan Dela Cruz',
       },
       order : null,
     };
@@ -65,11 +65,12 @@ export default {
 
   ionViewWillEnter() {
     const savedOrder = localStorage.getItem('lastOrder');
+    const savedGcashInfo = localStorage.getItem('gcash_info');
     if (savedOrder) {
-      console.log('Retrieved order from localStorage:', savedOrder);
       this.order = JSON.parse(savedOrder);
-      // Optionally remove it from storage if you only need it once
-      // localStorage.removeItem('lastOrder');
+    }
+    if (savedGcashInfo) {
+      this.gcashDetails = JSON.parse(savedGcashInfo);
     }
   },
   methods: {

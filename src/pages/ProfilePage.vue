@@ -10,7 +10,7 @@
         <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
           <ion-item lines="none">
             <ion-avatar slot="start">
-              <img src="https://i.pravatar.cc/150?img=3" alt="Profile Picture" />
+              <img :src="user?.profile_url || 'https://i.pravatar.cc/150?img=3'" alt="Profile Picture" style="object-fit: contain;"/>
             </ion-avatar>
             <ion-label>
               <h2>{{ user?.full_name }}</h2>

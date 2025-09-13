@@ -122,8 +122,7 @@ export default {
 
     // Handle Forgot Password
     handleForgotPassword() {
-      // Navigate to password recovery page or show a modal
-      console.log("Redirecting to forgot password page...");
+      this.$router.push('/forgot-password');
     }
   },
 }

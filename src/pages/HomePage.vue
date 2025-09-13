@@ -4,6 +4,12 @@
       <ion-title>Home Page</ion-title>
     </ion-header> -->
     <ion-content :fullscreen="true">
+      <ion-refresher slot="fixed" @ionRefresh="doRefresh">
+        <ion-refresher-content
+          pulling-text="Pull to refresh"
+          refreshing-text="Refreshing..."
+        />
+      </ion-refresher>
       <div class="list-wrapper">
 
         <!-- Search Bar -->
@@ -52,6 +58,7 @@
                       <ion-icon :icon="starIcon" class="star-icon" />
                     </div>
                     <div class="price-book">
+                      <span class="item-price">Available : {{ item.available_quantity}}</span>
                       <span class="item-price">₱ {{ item.price }}/day</span>
                       <!-- <ion-button size="small" color="primary" shape="round" fill="outline">
                         Book
@@ -85,13 +92,14 @@
 import { star, cart, heart } from 'ionicons/icons'
 import { alertController,  } from '@ionic/vue'
 
-import { IonPage, IonBadge, IonHeader, IonTitle, IonContent, IonSearchbar, IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton, IonLoading  } from '@ionic/vue';
+import { IonPage, IonRefresherContent, IonBadge, IonHeader, IonTitle, IonContent, IonSearchbar, IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol, IonCard, IonIcon, IonButton, IonLoading  } from '@ionic/vue';
 export default {
   name: 'HomePage',
   components: {
     IonPage,
     IonHeader,
     IonBadge,
+    IonRefresherContent,
     IonTitle,
     IonLoading,
     IonContent,
@@ -118,7 +126,7 @@ export default {
         text: 'All'
       },],
       categorySelected: 0,
-      items: [],
+      items: []
     }
   },
   mounted(){
@@ -136,6 +144,9 @@ export default {
   },
   
   methods: {
+    doRefresh(event) {
+      alert('Refreshing data...');
+    },
     async confirmation() {
       const alert = await alertController.create({
         header: 'Are you sure?',
@@ -179,15 +190,24 @@ export default {
       this.axios.get(`/items/get-items/${this.categorySelected}?search=${this.searchText}`).then((res)=>{
           if(res.status){
             const allItems = res.data.data.map((item)=>{
+              var current_image = '';
+              if(item.has_sizes_color_options){
+                current_image = item.variations[0].image_url;
+              }
+              else{
+                current_image = item.images[0]?.image_url || 'https://via.placeholder.com/150'
+              }
               return {
                 id:item.id,
                 reviews_avg_rating : item.reviews_avg_rating,
                 is_favorite: item.is_favorite,
                 name:item.name,
                 price:item.price_per_day,
-                image:item.images[0]?.image_url || 'https://via.placeholder.com/150' // Default image if none
+                available_quantity: item.available_quantity,
+                image:current_image
               }
             });
+            console.log(allItems,'allItems')
             this.items = [...allItems];
           }
           
@@ -331,7 +351,9 @@ ion-segment-button {
 .price-book {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
 }
 
 .item-price {
