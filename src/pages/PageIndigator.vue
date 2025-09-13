@@ -139,6 +139,7 @@ export default {
           this.$store.dispatch('getCart');
           const orderData = res.data.booking;
           const gcash_info = res.data.gcash_info;
+          this.$store.dispatch('getInfoUser');
           localStorage.setItem('lastOrder', JSON.stringify(orderData));
           localStorage.setItem('gcash_info', JSON.stringify(gcash_info));
           setTimeout(() => {

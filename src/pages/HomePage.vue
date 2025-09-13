@@ -4,12 +4,12 @@
       <ion-title>Home Page</ion-title>
     </ion-header> -->
     <ion-content :fullscreen="true">
-      <ion-refresher slot="fixed" @ionRefresh="doRefresh">
+      <!-- <ion-refresher slot="fixed" @ionRefresh="doRefresh">
         <ion-refresher-content
           pulling-text="Pull to refresh"
           refreshing-text="Refreshing..."
         />
-      </ion-refresher>
+      </ion-refresher> -->
       <div class="list-wrapper">
 
         <!-- Search Bar -->
