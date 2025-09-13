@@ -60,7 +60,7 @@
                   <div class="item-meta" style="margin-top: 10px;">
                     <div class="item-rating">
                       <ion-icon :icon="starIcon" class="star-icon" />
-                      <span class="rating-value">5.0</span>
+                      <span class="rating-value">{{items.reviews_avg_rating ? items.reviews_avg_rating : '0'}}</span>
                     </div>
 
                     <span class="item-price">₱{{ items.price_per_day }}/day</span>
