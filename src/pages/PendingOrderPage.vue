@@ -118,7 +118,7 @@
           <ion-item v-for="(item, idx) in selectedBooking" :key="idx" class="item-card">
             <!-- Car Image -->
             <ion-thumbnail slot="start">
-              <img :src="item.item.images[0].image_url || '/default-car.png'" alt="Car Image" class="item-image" />
+              <img :src="item.variation_id ? item.variation.image_url : item.item.images[0].image_url" alt="Car Image" class="item-image" />
             </ion-thumbnail>
 
             <!-- Car Details -->
