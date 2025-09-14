@@ -409,8 +409,7 @@ export default {
         qty: this.quantity,
         need_driver_license: item.need_driver_license,
         image: item.images[0]?.image_url || '',
-        variation: variation_id,
-        variation_id: item.variation_id,
+        variation_id: variation_id,
       }
       // // Store selected items in Vuex store
       this.$store.commit('setItemToRent', item_to_rent);

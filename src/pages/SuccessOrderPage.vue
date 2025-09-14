@@ -17,8 +17,8 @@
           </ion-label>
         </ion-item>
         <div class="gcash-details" v-if="order">
-          <p><strong>GCash Number:</strong> {{ gcashDetails.account_number }}</p>
-          <p><strong>Account Name:</strong> {{ gcashDetails.account_name }}</p>
+          <p><strong>GCash Number:</strong> {{ gcashDetails?.account_number || 'N/A' }}</p>
+          <p><strong>Account Name:</strong> {{ gcashDetails?.account_name || 'N/A' }}</p>
           <p><strong>Total Amount:</strong> ₱{{ order.total_price }}</p>
           <p><strong>Start Date:</strong> {{ formatDate(order.start_date) }}</p>
           <p><strong>End Date:</strong> {{ formatDate(order.end_date) }}</p>
@@ -41,6 +41,7 @@
 import { onIonViewWillEnter } from '@ionic/vue';
 import { checkmarkCircleOutline } from 'ionicons/icons';
 import { IonPage, IonContent, IonCard, IonItem, IonLabel, IonButton, IonIcon } from '@ionic/vue';
+import moment from 'moment';
 
 export default {
   name: 'SuccessOrderPage',
@@ -72,11 +73,7 @@ export default {
     const savedGcashInfo = localStorage.getItem('gcash_info');
     if (savedOrder) {
       this.order = JSON.parse(savedOrder);
-      const pickup = new Date(this.order.start_date);
-      const returnD = new Date(this.order.end_date);
-      const diffTime = Math.abs(returnD - pickup);
-      this.total_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Include both pickup and return days
-      if(this.total_days < 1) this.total_days = 1;
+      this.total_days = this.order.total_days || 1;
     }
     if (savedGcashInfo) {
       this.gcashDetails = JSON.parse(savedGcashInfo);

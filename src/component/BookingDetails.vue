@@ -235,7 +235,7 @@ export default {
         // Convert to base64
         const reader = new FileReader();
         reader.onload = (event) => {
-          this.bookingDetails.selectedFileBase64 = event.target.result; // <-- base64 string
+          this.booking_details.selectedFileBase64 = event.target.result; // <-- base64 string
         };
         reader.readAsDataURL(file);
       }
