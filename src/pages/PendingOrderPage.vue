@@ -330,6 +330,9 @@ export default {
             }
           });
         }
+        else{
+          this.orders = [];
+        }
       }).catch((error) => {
         console.log(error, 'error')
       }).finally(() => {
