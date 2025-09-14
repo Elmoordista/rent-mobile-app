@@ -5,7 +5,7 @@
       <div class="success-header">
         <ion-icon :icon="checkmarkCircleOutline" size="large" class="success-icon"></ion-icon>
         <h2>Booking Confirmed!</h2>
-        <p>Your car rental has been successfully booked.</p>
+        <p>Your rental booking was successful!</p>
       </div>
 
       <!-- Payment Info (GCash only) -->

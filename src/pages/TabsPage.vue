@@ -3,17 +3,17 @@
     <ion-tabs>
       <ion-router-outlet></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="home" href="/cars">
+        <ion-tab-button tab="home" href="/cars" style="border-top-left-radius: 15px;">
           <ion-icon :icon="home" />
           <ion-label>Home</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="radio" href="/booking">
-          <ion-icon :icon="car" />
+          <ion-icon :icon="cart" />
           <ion-label>Booking</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="person" href="/profile">
+        <ion-tab-button tab="person" href="/profile" style="border-top-right-radius: 15px;">
           <ion-icon :icon="person" />
           <ion-label>Profile</ion-label>
         </ion-tab-button>
@@ -25,7 +25,7 @@
 <script lang="ts">
   import { IonPage, IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonLabel, IonIcon } from '@ionic/vue'
 
-  import { home, car, person} from 'ionicons/icons';
+  import { home, car, person, cart} from 'ionicons/icons';
 
   export default {
     components: { IonPage, IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonLabel, IonIcon },
@@ -33,6 +33,7 @@
       return {
           home,
           car,
+          cart,
           person,
       };
     },
@@ -45,7 +46,7 @@
   }
 
   ion-tab-button {
-     background-color: gray;
+     background-color: rgb(48, 47, 47);
     --color-selected: #fff;
   }
   ion-icon {
