@@ -180,7 +180,7 @@ export default {
         alert('Please select a pickup date.');
         return;
       }
-      else if (this.booking_details.pickupDate && this.booking_details.returnDate) {
+      else if (this.booking_details.pickupDate && this.booking_deurnDate) {
         const pickup = new Date(this.booking_details.pickupDate);
         const returnD = new Date(this.booking_details.returnDate);
 
@@ -210,7 +210,7 @@ export default {
     },
   },
 };
-</script>
+</script>tails.ret
 <style scoped>
 .header {
   border-bottom: 1px solid #e0e0e0;

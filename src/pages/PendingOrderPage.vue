@@ -7,6 +7,13 @@
       <ion-title>Pending Orders</ion-title>
     </ion-header>
 
+    <ion-segment  v-model="selectedTab" scrollable>
+      <ion-segment-button value="pending" @click="handleFilterOrders('pending')">Pending</ion-segment-button>
+      <ion-segment-button value="confirmed" @click="handleFilterOrders('confirmed')">Confirmed</ion-segment-button>
+      <ion-segment-button value="completed" @click="handleFilterOrders('completed')">Completed</ion-segment-button>
+      <ion-segment-button value="cancelled" @click="handleFilterOrders('cancelled')">Cancelled</ion-segment-button>
+    </ion-segment>
+
     <!-- Orders List -->
     <ion-content class="ion-padding pending-orders-content" v-if="!loading">
       <ion-list style="background-color: transparent;">
@@ -17,6 +24,10 @@
         >
           <ion-label>
             <div class="order-summary">
+              <div class="summary-row">
+                <span>Order id:</span>
+                <span class="highlight" style="border-radius: 5px; background-color: #000; color: #fff; padding: 2px 3px">{{ booking.id }}</span>
+              </div>
               <div class="summary-row">
                 <span>Total Price:</span>
                 <span class="highlight">₱{{ priceAddComma(booking.total_price) }}</span>
@@ -43,35 +54,34 @@
                 <span class="order-status" style="text-transform: capitalize; background: #000;">{{ booking.payments ? 'Uploaded' : 'Not Uploaded' }}</span>
               </div>
             </div>
-
-            <ion-button v-if="booking.paymentType =='gcash'"
-              expand="full"
-              fill="solid"
-              color="primary"
-              shape="round"
-              class="show-items-btn"
-              style="color: #000;"
-              @click="openUploadModal(booking)"
-            >
-              {{booking.payments ? 'Update Proof of Payment' : 'Upload Proof of Payment'}}
-            </ion-button>
-            <ion-button
-              expand="full"
-              fill="solid"
-              color="dark"
-              shape="round"
-              class="show-items-btn"
-              @click="openItemsModal(booking)"
-            >
-              Show All Items
-            </ion-button>
+              <ion-button v-if="booking.paymentType =='gcash' && booking.status == 'pending'"
+                expand="full"
+                fill="solid"
+                color="primary"
+                shape="round"
+                class="show-items-btn"
+                style="color: #000;"
+                @click="openUploadModal(booking)"
+              >
+                {{booking.payments ? 'Update Proof of Payment' : 'Upload Proof of Payment'}}
+              </ion-button>
               <ion-button
+                expand="full"
+                fill="solid"
+                color="dark"
+                shape="round"
+                class="show-items-btn"
+                @click="openItemsModal(booking)"
+              >
+                Show All Items
+              </ion-button>
+              <ion-button v-if="booking.status == 'pending'"
                 expand="full"
                 fill="solid"
                 color="danger"
                 shape="round"
                 class="show-items-btn"
-                @click="openItemsModal(booking)"
+                @click="handleCancelOrder(booking.id)"
               >
                 Cancel Order
               </ion-button>
@@ -156,6 +166,7 @@
 </template>
 
 <script>
+import { alertController } from '@ionic/vue';
 import { onIonViewWillEnter } from '@ionic/vue';
 import { arrowBackOutline } from "ionicons/icons";
 import {
@@ -200,6 +211,7 @@ export default {
   data() {
     return {
       loading: true,
+      selectedTab: 'pending',
       selectedFile: null,
       previewImage: null,
       selectedBookingId: null,
@@ -218,6 +230,35 @@ export default {
     this.handleGetPending();
   },
   methods: {
+    handleFilterOrders(status) {
+      this.handleGetPending(status)
+    },
+    handleCancelOrder(bookingId) {
+      alertController.create({
+        header: 'Confirm Cancellation',
+        message: 'Are you sure you want to cancel this order?',
+        buttons: [
+          {
+            text: 'No',
+            role: 'cancel'
+          },
+          {
+            text: 'Yes',
+            handler: async () => {
+              try {
+                this.loading_items = true;
+                await this.axios.put('/order/cancel-order/' + bookingId);
+                this.handleGetPending(this.selectedTab); // Refresh orders
+              } catch (error) {
+                console.error('Error cancelling order:', error);
+              } finally {
+                this.loading_items = false;
+              }
+            }
+          }
+        ]
+      }).then(alert => alert.present());
+    },
     openUploadModal(booking) {
       this.selectedBookingId = booking.id;
       this.showUploadModal = true;
@@ -271,8 +312,9 @@ export default {
       const total_price = parseInt(price);
       return total_price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
-    handleGetPending() {
-      this.axios.get('/order/get-pending').then((res) => {
+    handleGetPending(status = 'pending') {
+      this.loading_items = true;
+      this.axios.get('/order/get-pending?status=' + status).then((res) => {
         if(res.data.data?.length) {
           this.orders = res.data.data.map((item) => {
             return {
@@ -292,6 +334,7 @@ export default {
         console.log(error, 'error')
       }).finally(() => {
         this.loading = false;
+        this.loading_items = false;
       });
     },
     handleBack() {

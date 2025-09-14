@@ -16,10 +16,13 @@
             <p>Please send your payment to:</p>
           </ion-label>
         </ion-item>
-        <div class="gcash-details">
+        <div class="gcash-details" v-if="order">
           <p><strong>GCash Number:</strong> {{ gcashDetails.account_number }}</p>
           <p><strong>Account Name:</strong> {{ gcashDetails.account_name }}</p>
-          <p><strong>Total Amount:</strong> ₱{{ booking.totalPrice.toLocaleString() }}</p>
+          <p><strong>Total Amount:</strong> ₱{{ order.total_price }}</p>
+          <p><strong>Start Date:</strong> {{ formatDate(order.start_date) }}</p>
+          <p><strong>End Date:</strong> {{ formatDate(order.end_date) }}</p>
+          <p><strong>Total Days:</strong> {{ total_days }}</p>
           <p class="note">📌 Don’t forget to upload your proof of payment in your booking details.</p>
         </div>
       </ion-card>
@@ -45,6 +48,7 @@ export default {
   data() {
     return {
       checkmarkCircleOutline,
+      total_days: 1,
       booking: {
         id: 'CR12345',
         status: 'Confirmed',
@@ -68,12 +72,24 @@ export default {
     const savedGcashInfo = localStorage.getItem('gcash_info');
     if (savedOrder) {
       this.order = JSON.parse(savedOrder);
+      const pickup = new Date(this.order.start_date);
+      const returnD = new Date(this.order.end_date);
+      const diffTime = Math.abs(returnD - pickup);
+      this.total_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Include both pickup and return days
+      if(this.total_days < 1) this.total_days = 1;
     }
     if (savedGcashInfo) {
       this.gcashDetails = JSON.parse(savedGcashInfo);
     }
   },
   methods: {
+    formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    },
     goHome() {
       location.href = '/';
     },

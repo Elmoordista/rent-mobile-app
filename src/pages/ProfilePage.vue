@@ -40,7 +40,7 @@
         </ion-item> -->
         <ion-item button @click="navigateToPendingOrders" lines="none">
           <ion-icon :icon="cartOutlineIcon" slot="start" />
-          <ion-label>Pending Orders  <span v-if="profile.pending_orders > 0" class="badge">{{ profile.pending_orders }}</span></ion-label>
+          <ion-label>Orders  <span v-if="profile.pending_orders > 0" class="badge">{{ profile.pending_orders }}</span></ion-label>
           <ion-icon :icon="arrowForwardIcon" size="small" slot="end"/>
         </ion-item>
       </ion-list>

@@ -177,7 +177,7 @@
     />  
 
     <ion-footer class="ion-no-border" 
-      style="display: flex; gap: 5px; justify-content: space-around; padding: 0 5px;"
+      style="display: flex; gap: 5px; justify-content: space-around; padding:5px; padding-bottom: 20px;"
     >
       <!-- Add to Cart -->
       <ion-button v-if="!items.need_driver_license"
